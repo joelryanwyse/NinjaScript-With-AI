@@ -42,7 +42,7 @@ Day-to-day:
 3. **End of task:** confirm the file is deployed (`deploy-all.ps1` if unsure), then commit + push.
 4. **Other machine:** `git pull` → post-merge hook auto-deploys the changed files to NT.
 
-Memory at `.claude/memory/` is junctioned into Claude Code's standard memory path by [.claude/scripts/link-memory.ps1](.claude/scripts/link-memory.ps1) so it rides on git too.
+Memory at `.claude/memory/` is junctioned into Claude Code's standard memory path by [.claude/scripts/link-memory.ps1](.claude/scripts/link-memory.ps1) so it rides on git too. The junction is created automatically on first Claude Code session via [.claude/scripts/auto-setup.ps1](.claude/scripts/auto-setup.ps1) (wired as a SessionStart hook in [.claude/settings.json](.claude/settings.json)); on subsequent sessions it's a fast no-op. The user can also double-click [install.bat](install.bat) to seed a fresh machine without opening Claude Code.
 
 ## How the user wants substantial work approached
 

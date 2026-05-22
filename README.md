@@ -6,29 +6,15 @@ The detailed engineering context (file layout, NT version range, deploy rules, l
 
 ## First-time setup on a new machine
 
-1. **Clone outside OneDrive** — OneDrive corrupts `.git` folders. Recommended path: `C:\Users\<you>\source\NinjaScript-With-AI`.
-   ```powershell
-   git clone https://github.com/joelryanwyse/NinjaScript-With-AI.git C:\Users\$env:USERNAME\source\NinjaScript-With-AI
-   cd C:\Users\$env:USERNAME\source\NinjaScript-With-AI
-   ```
+1. **Clone outside OneDrive** — OneDrive corrupts `.git` folders. Recommended path: `C:\Users\<you>\source\NinjaScript-With-AI`. (Use Git for Windows or GitHub Desktop; no PowerShell required for this step beyond what those tools provide.)
 
-2. **Link memory into Claude's standard path** — so Claude reads the in-repo memory:
-   ```powershell
-   .\.claude\scripts\link-memory.ps1
-   ```
-   This creates a junction from `~\.claude\projects\<project-key>\memory` to `<repo>\.claude\memory\`. Backs up any pre-existing memory at that location first.
+2. **Run setup — pick one:**
+   - **Open Claude Code in the repo folder.** A SessionStart hook auto-runs the setup (junctions memory, installs git hooks, seeds NinjaTrader's Indicators folder on first run). Subsequent sessions are silent no-ops.
+   - **Or double-click `install.bat`** at the repo root. Same setup, no Claude required.
 
-3. **Install git hooks** — so a `git pull` auto-deploys updated `.cs` files to NinjaTrader:
-   ```powershell
-   .\.claude\scripts\install-git-hooks.ps1
-   ```
+3. Open NinjaTrader, compile (F5 in NinjaScript Editor), verify indicators load.
 
-4. **One-time full deploy** to seed NT with the current versions:
-   ```powershell
-   .\.claude\scripts\deploy-all.ps1
-   ```
-
-5. Open NinjaTrader, compile (F5 in NinjaScript Editor), verify indicators load.
+That's it. Nothing else to type into PowerShell.
 
 ## Day-to-day workflow
 
@@ -57,10 +43,12 @@ All under [.claude/scripts/](.claude/scripts/):
 
 | Script | Purpose |
 |---|---|
-| `link-memory.ps1` | One-time per machine. Junctions in-repo memory into Claude's project memory path. |
-| `install-git-hooks.ps1` | One-time per machine. Installs the `post-merge` hook so `git pull` auto-deploys. |
+| `auto-setup.ps1` | Self-healing setup. Run by Claude's SessionStart hook and by `install.bat`. Junctions memory, installs git hooks, seeds NT on first run. Idempotent. |
+| `link-memory.ps1` | (Called by auto-setup.) Junctions in-repo memory into Claude's project memory path. |
+| `install-git-hooks.ps1` | (Called by auto-setup.) Installs the `post-merge` hook so `git pull` auto-deploys. |
 | `deploy-all.ps1` | Manual safety-net. Copies every root `.cs` to NT's Indicators folder. |
 | `deploy-to-ninjatrader.ps1` | PostToolUse hook called by Claude Code after each Edit/Write. Best-effort. |
+| `post-merge-deploy.ps1` | Helper called from the post-merge git hook to copy changed files into NT. |
 | `post-merge` (installed) | Git hook. After `git pull`, copies changed `.cs` files into NT's Indicators folder. |
 
 ## What goes where
