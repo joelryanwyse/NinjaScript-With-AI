@@ -4,3 +4,17 @@ Thumbs.db
 
 # Claude Code machine-local settings (permissions, etc.)
 .claude/settings.local.json
+
+# Worktrees (per-session isolated checkouts) live under .claude/worktrees/
+# but are themselves separate git worktrees — never check their contents into main.
+.claude/worktrees/
+
+# Working artifacts from edit sessions — never commit
+*.corrupt-backup-*.cs
+*.merged.cs
+*.bak
+*~
+*.orig
+
+# Hook error log if it ever lands in the repo root
+nt-deploy-hook-errors.log

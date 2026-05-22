@@ -1,0 +1,37 @@
+#!/bin/sh
+# post-merge: after `git pull` (or any merge) updates files in this repo,
+# copy any changed root *.cs files to NinjaTrader's Indicators folder.
+#
+# Installed into .git/hooks/post-merge by .claude\scripts\install-git-hooks.ps1.
+# Calls PowerShell to do the actual work because path-resolution + Documents
+# folder discovery are cleaner there.
+
+# git provides the pre-merge HEAD in $1 isn't reliable across merge types,
+# so we just diff HEAD@{1}..HEAD if available, else deploy everything.
+set -e
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+# Use the main checkout (common dir parent), not whichever worktree triggered the hook.
+GIT_COMMON_DIR=$(git rev-parse --git-common-dir)
+case "$GIT_COMMON_DIR" in
+    /*|[A-Za-z]:*) MAIN_GIT_DIR="$GIT_COMMON_DIR" ;;
+    *) MAIN_GIT_DIR="$REPO_ROOT/$GIT_COMMON_DIR" ;;
+esac
+MAIN_CHECKOUT=$(dirname "$MAIN_GIT_DIR")
+
+# Hand off to PowerShell. We pass the list of changed .cs files (newline-separated)
+# on stdin so PowerShell can copy exactly those. If diff fails (e.g. first pull
+# right after install), we fall back to deploy-all.
+CHANGED=$(git diff --name-only ORIG_HEAD HEAD 2>/dev/null | grep -E '^[^/]+\.cs$' || true)
+
+if [ -z "$CHANGED" ]; then
+    echo "[post-merge] no root .cs changes; skipping deploy."
+    exit 0
+fi
+
+echo "[post-merge] deploying $(echo "$CHANGED" | wc -l) changed .cs file(s) to NinjaTrader."
+
+# Run the deploy script, filtered to changed files. Pass list via env var to avoid
+# shell quoting issues with spaces.
+export NT_DEPLOY_FILES="$CHANGED"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "& '$MAIN_CHECKOUT\.claude\scripts\post-merge-deploy.ps1'"

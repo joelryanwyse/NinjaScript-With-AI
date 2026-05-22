@@ -1,0 +1,16 @@
+# Default: let git decide on line endings per file type.
+* text=auto
+
+# Force LF on shell scripts (git-hooks/* run through MinGW bash on Windows and
+# choke on CRLF). Anything that's run by /bin/sh stays LF on disk.
+.claude/git-hooks/* text eol=lf
+*.sh text eol=lf
+
+# Windows-native files keep CRLF — PowerShell, NinjaScript C#.
+*.ps1 text eol=crlf
+*.cs text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Markdown is fine either way; treat as text.
+*.md text

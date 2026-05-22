@@ -1,0 +1,9 @@
+- [User role](user_role.md) — NinjaScript dev; two huge single-file indicators: aiEnhancedChartTrader.cs (~96k lines) and aiDuplicateAccountActions.cs (~54k, copier dashboard).
+- [NinjaTrader deploy](project_ninjatrader_deploy.md) — after finishing edits to any NinjaScript .cs file, manually copy it to NT's Indicators folder as the final step; auto-hook is unreliable.
+- [Git multi-machine sync](project_git_multimachine.md) — repo moved out of OneDrive, git-synced via private GitHub; pull/push across machines.
+- [ECT render perf regression](project_ect_render_regression.md) — new ECT v26.x freezes 3-5s on multi-order actions; D2DERR_WRONG_STATE; drives render-efficiency work.
+- [ECT follower-exit lag bug](project_followerexit_lag.md) — NT 8.1.7.0: copier follower exits lag ~2s each when ECT is charted on the followers' instrument; root cause confirmed.
+- [Copier flatten reversal incident](project_copier_flatten_reversal.md) — 2026-05-21: copier mis-sizes/reverses followers on Flatten All; 2 customers; tracker-desync root cause.
+- [Copier rejection-resubmit storm](project_copier_rejection_storm.md) — 2026-05-19: rejected master order → 425x resubmit storm; root cause unknown; MASTER_REJECT diag logging added.
+- [Optimization approach](feedback_optimization_approach.md) — user wants thorough full-scope work (optimization, refactors, features); picks the richer option; compile-tests himself.
+- [NT version compatibility](feedback_nt_version_compat.md) — must support customers' NT8 range (8.0.28.0–8.1.7.0+); avoid version-fragile/"unsupported" APIs.
