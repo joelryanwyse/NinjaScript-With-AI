@@ -1,0 +1,6 @@
+# Windows / OneDrive artifacts
+desktop.ini
+Thumbs.db
+
+# Claude Code machine-local settings (permissions, etc.)
+.claude/settings.local.json
