@@ -28,8 +28,12 @@ try {
     }
     if (-not $src) { exit 0 }
 
-    $srcDir = 'C:\Users\joelw\OneDrive\Desktop\NinjaScript With AI'
-    $dstDir = 'C:\Users\joelw\OneDrive\Documents\NinjaTrader 8\bin\Custom\Indicators'
+    # CLAUDE_PROJECT_DIR is set by Claude Code to the project root.
+    $srcDir = $env:CLAUDE_PROJECT_DIR
+    if (-not $srcDir) { exit 0 }
+
+    # NinjaTrader 8 stores custom indicators under the user's Documents folder.
+    $dstDir = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'NinjaTrader 8\bin\Custom\Indicators'
 
     $srcLower = $src.ToLower()
     if (-not $srcLower.EndsWith('.cs')) { exit 0 }

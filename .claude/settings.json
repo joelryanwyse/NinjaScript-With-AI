@@ -11,8 +11,8 @@
               "-NoProfile",
               "-ExecutionPolicy",
               "Bypass",
-              "-File",
-              "C:\\Users\\joelw\\OneDrive\\Desktop\\NinjaScript With AI\\.claude\\scripts\\deploy-to-ninjatrader.ps1"
+              "-Command",
+              "& \"$env:CLAUDE_PROJECT_DIR\\.claude\\scripts\\deploy-to-ninjatrader.ps1\""
             ],
             "timeout": 30
           }
