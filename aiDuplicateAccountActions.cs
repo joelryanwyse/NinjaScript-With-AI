@@ -386,7 +386,7 @@ namespace NinjaTrader.NinjaScript.Indicators
 		// ── End cross-indicator shared registry ─────────────────────────
 
 		// Version string — read by the AddOn to set the window caption before the indicator loads
-		public static readonly string DashboardVersion = "26. 5. 25. 1";
+		public static readonly string DashboardVersion = "26. 5. 25. 2";
 
 		// ── WPF brush freezing helpers ────────────────────────────────
 		// NT 8.1.x flags an "unfrozen brush" error when any indicator-exposed
@@ -7695,6 +7695,59 @@ private void DumpInstanceFields(object obj, string label)
 			}
 		}
 
+		// NT 8.1.8+ added a "Data Series Watermark" option in Chart properties
+		// that overlays text on the chart by default. This indicator suppresses
+		// it by clearing any watermark text and forcing any watermark brush/color
+		// to transparent. Done via reflection so older NT builds (8.0.28 – 8.1.7)
+		// that don't expose these properties simply find no matching members and
+		// the call is a no-op. Idempotent — guarded by _watermarkSuppressed so we
+		// only walk reflection once per indicator load. Runs on the UI thread via
+		// SafeDispatch because ChartControl.Properties is a WPF object.
+		private bool _watermarkSuppressed = false;
+		private void SuppressDataSeriesWatermark()
+		{
+			if (_watermarkSuppressed) return;
+			try
+			{
+				SafeDispatch(() =>
+				{
+					try
+					{
+						if (ChartControl == null) return;
+						var hosts = new System.Collections.Generic.List<object> { ChartControl };
+						try { var p = ChartControl.Properties; if (p != null) hosts.Add(p); } catch { }
+						foreach (var host in hosts)
+						{
+							if (host == null) continue;
+							PropertyInfo[] members;
+							try { members = host.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance); }
+							catch { continue; }
+							foreach (var pi in members)
+							{
+								try
+								{
+									if (pi == null || !pi.CanWrite) continue;
+									if (pi.GetIndexParameters().Length > 0) continue;
+									if (pi.Name.IndexOf("Watermark", StringComparison.OrdinalIgnoreCase) < 0) continue;
+									var pt = pi.PropertyType;
+									if (pt == typeof(string))
+										pi.SetValue(host, string.Empty);
+									else if (typeof(System.Windows.Media.Brush).IsAssignableFrom(pt))
+										pi.SetValue(host, System.Windows.Media.Brushes.Transparent);
+									else if (pt == typeof(System.Windows.Media.Color))
+										pi.SetValue(host, System.Windows.Media.Colors.Transparent);
+								}
+								catch { }
+							}
+						}
+						_watermarkSuppressed = true;
+					}
+					catch { }
+				});
+			}
+			catch { }
+		}
+
 		protected override void OnStateChange()
 		{
 			// Outer try/catch so a cross-thread or other exception in any state
@@ -8901,7 +8954,8 @@ private void DumpInstanceFields(object obj, string label)
 			{
 				Calculate					= Calculate.OnBarClose;
 				SetZOrder(-1);
-			}			
+				SuppressDataSeriesWatermark();
+			}
 			else if (State == State.Terminated)
 			{
 				// Flush and dispose diagnostic logger BEFORE any early returns —
