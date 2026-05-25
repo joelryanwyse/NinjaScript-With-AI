@@ -222,7 +222,7 @@ namespace NinjaTrader.NinjaScript.Indicators
 		
 	
 		private string ThisName = "aiEnhancedChartTrader";
-		private string pCurrentVersionName = "26. 5. 21. 21";
+		private string pCurrentVersionName = "26. 5. 25. 1";
 		private string pServerVersionString = "";
 		private string pServerDownloadUrl = "";
 		private string pServerChangelog = "";
@@ -63290,7 +63290,7 @@ foreach (Order or in myAccount.Orders.ToList())
 					_renderCircuitCooldownTicks = _ortcNow + (long)(2.0 * System.Diagnostics.Stopwatch.Frequency);
 				}
 			}
-			LogDiag("RENDER", "OnRenderTargetChanged", "thread=" + System.Threading.Thread.CurrentThread.ManagedThreadId + " rtNull=" + (RenderTarget == null) + " count=" + _ortcCount + (_ortcCount <= 4 ? ("\n" + System.Environment.StackTrace) : ""));
+			LogDiag("RENDER", "OnRenderTargetChanged", "thread=" + System.Threading.Thread.CurrentThread.ManagedThreadId + " rtNull=" + (RenderTarget == null) + " count=" + _ortcCount);
 			foreach (var kvp in cachedATMColorBrushes)
 				if (kvp.Value != null && !kvp.Value.IsDisposed) kvp.Value.Dispose();
 			cachedATMColorBrushes.Clear();

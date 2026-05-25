@@ -91,4 +91,4 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Output 'Junction created.'
-Write-Output 'Verify with: dir "{0}"' -f $targetMemoryDir
+Write-Output ('Verify with: dir "{0}"' -f $targetMemoryDir)
