@@ -222,7 +222,7 @@ namespace NinjaTrader.NinjaScript.Indicators
 		
 	
 		private string ThisName = "aiEnhancedChartTrader";
-		private string pCurrentVersionName = "26. 5. 25. 2";
+		private string pCurrentVersionName = "26. 5. 25. 3";
 		private string pServerVersionString = "";
 		private string pServerDownloadUrl = "";
 		private string pServerChangelog = "";
@@ -5226,6 +5226,7 @@ private int ATMSelectionCount = 0;
 			  else if (State == State.Historical)
 			  {
 			    LogDiag("SYSTEM", "StateChange", "State=Historical");
+			    LogBrushFreezeAudit("Historical");
 			    // Because we're dealing with UI elements, we need to use the Dispatcher which created the object
 			    // otherwise we will run into threading errors...
 			    // e.g, "Error on calling 'OnStateChange' method: You are accessing an object which resides on another thread."
@@ -6912,6 +6913,7 @@ private int ATMSelectionCount = 0;
 				else if (State == State.Realtime)
 				{
 					LogDiag("SYSTEM", "StateChange", "State=Realtime");
+					LogBrushFreezeAudit("Realtime");
 					// Re-bind any already-resting Price Based entry orders. On reload
 					// the account may have been selected before this transition so the
 					// AccountChanged path above might not have fired.
@@ -42065,6 +42067,47 @@ foreach (Order or in myAccount.Orders.ToList())
 		{
 			if (_logQueue == null || ex == null) return;
 			LogDiag(category, "ERROR " + context, "Type=" + ex.GetType().Name + ", Msg=" + ex.Message);
+		}
+
+		// TEMPORARY DIAGNOSTIC (v26.5.25.3) — enumerate every public Brush
+		// property on the indicator and log the names of any that are not
+		// Frozen. NT's "unfrozen brush" error is a generic one-liner with
+		// no stack trace; this tells us which property is the offender.
+		// Pull this once the freeze bug is closed.
+		private void LogBrushFreezeAudit(string when)
+		{
+			try
+			{
+				var props = this.GetType().GetProperties(
+					System.Reflection.BindingFlags.Public |
+					System.Reflection.BindingFlags.Instance);
+				var sb = new System.Text.StringBuilder();
+				int unfrozen = 0;
+				int total = 0;
+				foreach (var p in props)
+				{
+					if (!typeof(System.Windows.Media.Brush).IsAssignableFrom(p.PropertyType)) continue;
+					if (!p.CanRead) continue;
+					if (p.GetIndexParameters().Length > 0) continue;
+					object value;
+					try { value = p.GetValue(this); }
+					catch { continue; }
+					var brush = value as System.Windows.Media.Brush;
+					if (brush == null) continue;
+					total++;
+					if (!brush.IsFrozen)
+					{
+						if (unfrozen > 0) sb.Append(", ");
+						sb.Append(p.Name);
+						unfrozen++;
+					}
+				}
+				LogDiag("RENDER", "BrushAudit_" + when, "total=" + total + " unfrozen=" + unfrozen + (unfrozen > 0 ? " props=[" + sb.ToString() + "]" : ""));
+			}
+			catch (Exception ex)
+			{
+				LogDiagEx("RENDER", "BrushAudit_" + when, ex);
+			}
 		}
 
 		private void LogFlushCallback(object state)
