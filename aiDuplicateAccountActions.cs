@@ -386,7 +386,7 @@ namespace NinjaTrader.NinjaScript.Indicators
 		// ── End cross-indicator shared registry ─────────────────────────
 
 		// Version string — read by the AddOn to set the window caption before the indicator loads
-		public static readonly string DashboardVersion = "26. 5. 25. 7";
+		public static readonly string DashboardVersion = "26. 5. 25. 8";
 
 		// ── WPF brush freezing helpers ────────────────────────────────
 		// NT 8.1.x flags an "unfrozen brush" error when any indicator-exposed
@@ -7719,31 +7719,62 @@ private void DumpInstanceFields(object obj, string label)
 						if (ChartControl == null) return;
 						var hosts = new System.Collections.Generic.List<object> { ChartControl };
 						try { var p = ChartControl.Properties; if (p != null) hosts.Add(p); } catch { }
+						// DIAGNOSTIC v26.5.25.8 — enumerate ALL Watermark-named members
+						// (props + fields, read-only) on ChartControl and its Properties.
+						// v.7 cleared the string only and the error STILL fired — so
+						// either string-write cascades into a brush touch, or there's
+						// another path. List what we have so we can pick a non-DP-write
+						// suppression strategy.
+						var inv = new System.Text.StringBuilder();
 						foreach (var host in hosts)
 						{
 							if (host == null) continue;
-							PropertyInfo[] members;
-							try { members = host.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance); }
-							catch { continue; }
-							foreach (var pi in members)
+							string hn = host.GetType().Name;
+							PropertyInfo[] props;
+							try { props = host.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance); }
+							catch { props = new PropertyInfo[0]; }
+							foreach (var pi in props)
 							{
 								try
 								{
-									if (pi == null || !pi.CanWrite) continue;
 									if (pi.GetIndexParameters().Length > 0) continue;
 									if (pi.Name.IndexOf("Watermark", StringComparison.OrdinalIgnoreCase) < 0) continue;
-									// Only clear text. Writing Brush/Color values touches NT's
-									// DependencyProperty change handler which logs an "unfrozen
-									// brush" error against the OLD watermark brush value.
-									if (pi.PropertyType == typeof(string))
-										pi.SetValue(host, string.Empty);
+									object cur = null; try { cur = pi.GetValue(host); } catch { }
+									string isFrozen = "";
+									var br = cur as System.Windows.Media.Brush;
+									if (br != null) isFrozen = " frozen=" + br.IsFrozen;
+									if (inv.Length > 0) inv.Append("; ");
+									inv.Append(hn + ".prop:" + pi.Name + "(" + pi.PropertyType.Name + ")=" + (cur == null ? "null" : cur.ToString()) + isFrozen);
+								}
+								catch { }
+							}
+							FieldInfo[] fields;
+							try { fields = host.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance); }
+							catch { fields = new FieldInfo[0]; }
+							foreach (var fi in fields)
+							{
+								try
+								{
+									if (fi.Name.IndexOf("Watermark", StringComparison.OrdinalIgnoreCase) < 0) continue;
+									object cur = null; try { cur = fi.GetValue(host); } catch { }
+									string isFrozen = "";
+									var br = cur as System.Windows.Media.Brush;
+									if (br != null) isFrozen = " frozen=" + br.IsFrozen;
+									if (inv.Length > 0) inv.Append("; ");
+									inv.Append(hn + ".field:" + fi.Name + "(" + fi.FieldType.Name + ")=" + (cur == null ? "null" : cur.ToString()) + isFrozen);
 								}
 								catch { }
 							}
 						}
+						if (_diagLog != null)
+							_diagLog.Log("RENDER", "WATERMARK_INVENTORY", inv.Length == 0 ? "(none)" : inv.ToString());
+						// NOTE: NOT writing anything this version — we just want the inventory.
 						_watermarkSuppressed = true;
 					}
-					catch { }
+					catch (Exception _wsex)
+					{
+						try { if (_diagLog != null) _diagLog.Log("RENDER", "WATERMARK_INV_ERR", _wsex.Message); } catch { }
+					}
 				});
 			}
 			catch { }
