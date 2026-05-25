@@ -386,7 +386,7 @@ namespace NinjaTrader.NinjaScript.Indicators
 		// ── End cross-indicator shared registry ─────────────────────────
 
 		// Version string — read by the AddOn to set the window caption before the indicator loads
-		public static readonly string DashboardVersion = "26. 5. 25. 12";
+		public static readonly string DashboardVersion = "26. 5. 25. 13";
 
 		// ── WPF brush freezing helpers ────────────────────────────────
 		// NT 8.1.x flags an "unfrozen brush" error when any indicator-exposed
@@ -7695,15 +7695,13 @@ private void DumpInstanceFields(object obj, string label)
 			}
 		}
 
-		// Hide the NT 8.1.8+ "Data Series Watermark" overlay by walking the
-		// ChartControl's WPF visual tree and Collapsing any FrameworkElement
-		// whose Name contains "Watermark". Setting Visibility is an enum DP,
-		// not a Brush DP — avoids the trigger that broke the previous
-		// reflection-write approach (v26.5.25.2-9 saga).
-		//
-		// Scheduled via Dispatcher.BeginInvoke at ContextIdle priority so the
-		// chart's layout pass has completed and the watermark element has
-		// been created before we walk. Idempotent via _watermarkHidden.
+		// Hide the NT 8.1.8+ "Data Series Watermark" overlay. v.10 walked the
+		// ChartControl's visual tree looking for Name=*Watermark* — NT doesn't
+		// expose one. v.13 dumps every named FrameworkElement plus every
+		// TextBlock/Label/Run with text in BOTH ChartControl's visual tree
+		// AND the parent Window's tree, so we can see how NT actually wires
+		// the watermark (or confirm it's a D2D direct-draw with no WPF element).
+		// Dispatched at ContextIdle so layout has settled before the walk.
 		private bool _watermarkHidden = false;
 		private void HideDataSeriesWatermarkVisual()
 		{
@@ -7717,44 +7715,87 @@ private void DumpInstanceFields(object obj, string label)
 					try
 					{
 						if (ChartControl == null) return;
-						int hiddenCount = 0;
-						var found = new StringBuilder();
-						var stack = new Stack<System.Windows.DependencyObject>();
-						stack.Push(ChartControl);
-						while (stack.Count > 0)
+						var roots = new List<System.Windows.DependencyObject> { ChartControl };
+						try
 						{
-							var node = stack.Pop();
-							int count;
-							try { count = System.Windows.Media.VisualTreeHelper.GetChildrenCount(node); }
-							catch { continue; }
-							for (int i = 0; i < count; i++)
+							var parentWin = System.Windows.Window.GetWindow(ChartControl);
+							if (parentWin != null && parentWin != ChartControl) roots.Add(parentWin);
+						}
+						catch { }
+						var named = new StringBuilder();
+						var textsWithSymbol = new StringBuilder();
+						var textsAll = new StringBuilder();
+						int namedCount = 0, textCount = 0, totalNodes = 0;
+						foreach (var root in roots)
+						{
+							var stack = new Stack<System.Windows.DependencyObject>();
+							stack.Push(root);
+							while (stack.Count > 0)
 							{
-								System.Windows.DependencyObject child;
-								try { child = System.Windows.Media.VisualTreeHelper.GetChild(node, i); }
+								var node = stack.Pop();
+								totalNodes++;
+								int count;
+								try { count = System.Windows.Media.VisualTreeHelper.GetChildrenCount(node); }
 								catch { continue; }
-								if (child == null) continue;
-								var fe = child as System.Windows.FrameworkElement;
-								if (fe != null && !string.IsNullOrEmpty(fe.Name) &&
-									fe.Name.IndexOf("Watermark", StringComparison.OrdinalIgnoreCase) >= 0)
+								for (int i = 0; i < count; i++)
 								{
-									try { fe.Visibility = System.Windows.Visibility.Collapsed; hiddenCount++; }
-									catch { }
-									if (found.Length > 0) found.Append(", ");
-									found.Append(fe.GetType().Name + "[" + fe.Name + "]");
-									continue; // don't recurse into hidden subtree
+									System.Windows.DependencyObject child;
+									try { child = System.Windows.Media.VisualTreeHelper.GetChild(node, i); }
+									catch { continue; }
+									if (child == null) continue;
+									stack.Push(child);
+									var fe = child as System.Windows.FrameworkElement;
+									if (fe == null) continue;
+									if (!string.IsNullOrEmpty(fe.Name) && namedCount < 60)
+									{
+										if (named.Length > 0) named.Append(", ");
+										named.Append(fe.GetType().Name + "[" + fe.Name + "]");
+										namedCount++;
+									}
+									string txt = null;
+									var tb = child as System.Windows.Controls.TextBlock;
+									if (tb != null) txt = tb.Text;
+									else
+									{
+										var lbl = child as System.Windows.Controls.ContentControl;
+										if (lbl != null && lbl.Content is string) txt = (string)lbl.Content;
+										var run = child as System.Windows.Documents.Run;
+										if (run != null) txt = run.Text;
+									}
+									if (!string.IsNullOrEmpty(txt) && txt.Trim().Length > 0)
+									{
+										// Likely watermark text: NT default is instrument + period (e.g. "NQ 06-26  5 Min").
+										string instrumentName = null;
+										try { instrumentName = ChartControl != null && ChartControl.Instruments != null && ChartControl.Instruments.Count > 0 ? ChartControl.Instruments[0].FullName : null; } catch { }
+										if (!string.IsNullOrEmpty(instrumentName) && txt.IndexOf(instrumentName, StringComparison.OrdinalIgnoreCase) >= 0 && textsWithSymbol.Length < 400)
+										{
+											if (textsWithSymbol.Length > 0) textsWithSymbol.Append(" | ");
+											textsWithSymbol.Append(child.GetType().Name + "='" + txt.Replace('\n', ' ').Replace('\r', ' ') + "'");
+										}
+										if (textCount < 30 && textsAll.Length < 800)
+										{
+											if (textsAll.Length > 0) textsAll.Append(" | ");
+											string shortTxt = txt.Length > 40 ? txt.Substring(0, 40) + "..." : txt;
+											textsAll.Append(child.GetType().Name + "='" + shortTxt.Replace('\n', ' ').Replace('\r', ' ') + "'");
+											textCount++;
+										}
+									}
 								}
-								stack.Push(child);
 							}
 						}
 						if (_diagLog != null)
-							_diagLog.Log("UI", "WATERMARK_VISUAL_HIDE",
-								"hidden=" + hiddenCount +
-								(hiddenCount > 0 ? " elements=[" + found.ToString() + "]" : " (no FrameworkElement with Name containing 'Watermark' found in visual tree)"));
-						if (hiddenCount > 0) _watermarkHidden = true;
+						{
+							_diagLog.Log("UI", "WATERMARK_DUMP_NAMED", "totalNodes=" + totalNodes + " namedCount=" + namedCount + " names=[" + named.ToString() + "]");
+							_diagLog.Log("UI", "WATERMARK_DUMP_TEXTS", "textCount=" + textCount + " sample=[" + textsAll.ToString() + "]");
+							if (textsWithSymbol.Length > 0)
+								_diagLog.Log("UI", "WATERMARK_DUMP_MATCHES", "candidates=[" + textsWithSymbol.ToString() + "]");
+							else
+								_diagLog.Log("UI", "WATERMARK_DUMP_MATCHES", "(no TextBlock/Label/Run found containing the chart instrument name)");
+						}
 					}
 					catch (Exception ex)
 					{
-						try { if (_diagLog != null) _diagLog.Log("UI", "WATERMARK_VISUAL_HIDE_ERR", ex.Message); } catch { }
+						try { if (_diagLog != null) _diagLog.Log("UI", "WATERMARK_DUMP_ERR", ex.Message); } catch { }
 					}
 				}));
 			}
