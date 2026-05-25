@@ -386,7 +386,7 @@ namespace NinjaTrader.NinjaScript.Indicators
 		// ── End cross-indicator shared registry ─────────────────────────
 
 		// Version string — read by the AddOn to set the window caption before the indicator loads
-		public static readonly string DashboardVersion = "26. 5. 25. 11";
+		public static readonly string DashboardVersion = "26. 5. 25. 12";
 
 		// ── WPF brush freezing helpers ────────────────────────────────
 		// NT 8.1.x flags an "unfrozen brush" error when any indicator-exposed
@@ -12656,13 +12656,14 @@ private void BuildLoadedPropFirmsList()
 						if (!AccountIsNowConnected)
 						if (!AccountHasBeenSaved(accccnnnn))
 						{
-							// Match what NT's Control Center > Accounts tab shows: simulator /
-							// playback accounts (always listed) plus anything the user has
-							// explicitly saved in the copier (handled above by AccountHasBeenSaved)
-							// and anything currently connected (handled above by AccountIsNowConnected).
-							// Everything else is a historical NT-database entry from an old broker
-							// connection that isn't actively visible in NT's Accounts tab, so skip.
-							bool isSimAccount = acct.Provider == Provider.Simulator || acct.Provider == Provider.Playback;
+							// Whitelist Simulator only. Playback accounts only appear when
+							// the user is actually replaying (then they pass via
+							// AccountIsNowConnected) or has explicitly saved one (then they
+							// pass via AccountHasBeenSaved) — no point listing an idle
+							// Playback account on a normal session. Everything else here
+							// is a historical NT-database entry from an old broker
+							// connection that isn't visible in NT's Accounts tab.
+							bool isSimAccount = acct.Provider == Provider.Simulator;
 							if (!isSimAccount)
 								continue;
 						}
