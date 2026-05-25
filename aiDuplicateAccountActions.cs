@@ -386,7 +386,7 @@ namespace NinjaTrader.NinjaScript.Indicators
 		// ── End cross-indicator shared registry ─────────────────────────
 
 		// Version string — read by the AddOn to set the window caption before the indicator loads
-		public static readonly string DashboardVersion = "26. 5. 25. 14";
+		public static readonly string DashboardVersion = "26. 5. 25. 15";
 
 		// ── WPF brush freezing helpers ────────────────────────────────
 		// NT 8.1.x flags an "unfrozen brush" error when any indicator-exposed
@@ -7695,13 +7695,14 @@ private void DumpInstanceFields(object obj, string label)
 			}
 		}
 
-		// Hide the NT 8.1.8+ "Data Series Watermark" overlay. v.10 walked the
-		// ChartControl's visual tree looking for Name=*Watermark* — NT doesn't
-		// expose one. v.13 dumps every named FrameworkElement plus every
-		// TextBlock/Label/Run with text in BOTH ChartControl's visual tree
-		// AND the parent Window's tree, so we can see how NT actually wires
-		// the watermark (or confirm it's a D2D direct-draw with no WPF element).
-		// Dispatched at ContextIdle so layout has settled before the walk.
+		// Hide the NT 8.1.8+ "Data Series Watermark" overlay. v.13 dump confirmed
+		// the watermark is rendered by NT's D2D pipeline inside a WindowsFormsHost
+		// — invisible to WPF visual-tree walks. Last resort: write directly to
+		// NT's backing FIELDS (not the public properties' DP setters), which
+		// skips the change-notification path that fires NT's "unfrozen brush"
+		// error. If NT's renderer reads the field at draw time, this will
+		// suppress the overlay. If NT pulls the value from somewhere else
+		// entirely (or has a hard-coded default), the field write is harmless.
 		private bool _watermarkHidden = false;
 		private void HideDataSeriesWatermarkVisual()
 		{
@@ -7715,87 +7716,67 @@ private void DumpInstanceFields(object obj, string label)
 					try
 					{
 						if (ChartControl == null) return;
-						var roots = new List<System.Windows.DependencyObject> { ChartControl };
+						object props = null;
+						try { props = ChartControl.Properties; } catch { }
+						if (props == null) return;
+						var t = props.GetType();
+						var actions = new StringBuilder();
+
+						// 1) Clear the text via the auto-property backing field.
+						// NT 8.1.x default-shows the instrument symbol when the
+						// public string is empty, so write a single space — the
+						// renderer treats it as user-set and prints nothing visible.
 						try
 						{
-							var parentWin = System.Windows.Window.GetWindow(ChartControl);
-							if (parentWin != null && !object.ReferenceEquals(parentWin, ChartControl)) roots.Add(parentWin);
-						}
-						catch { }
-						var named = new StringBuilder();
-						var textsWithSymbol = new StringBuilder();
-						var textsAll = new StringBuilder();
-						int namedCount = 0, textCount = 0, totalNodes = 0;
-						foreach (var root in roots)
-						{
-							var stack = new Stack<System.Windows.DependencyObject>();
-							stack.Push(root);
-							while (stack.Count > 0)
+							var f = t.GetField("<DataSeriesWatermark>k__BackingField",
+								BindingFlags.NonPublic | BindingFlags.Instance);
+							if (f != null)
 							{
-								var node = stack.Pop();
-								totalNodes++;
-								int count;
-								try { count = System.Windows.Media.VisualTreeHelper.GetChildrenCount(node); }
-								catch { continue; }
-								for (int i = 0; i < count; i++)
-								{
-									System.Windows.DependencyObject child;
-									try { child = System.Windows.Media.VisualTreeHelper.GetChild(node, i); }
-									catch { continue; }
-									if (child == null) continue;
-									stack.Push(child);
-									var fe = child as System.Windows.FrameworkElement;
-									if (fe == null) continue;
-									if (!string.IsNullOrEmpty(fe.Name) && namedCount < 60)
-									{
-										if (named.Length > 0) named.Append(", ");
-										named.Append(fe.GetType().Name + "[" + fe.Name + "]");
-										namedCount++;
-									}
-									string txt = null;
-									var tb = child as System.Windows.Controls.TextBlock;
-									if (tb != null) txt = tb.Text;
-									else
-									{
-										var lbl = child as System.Windows.Controls.ContentControl;
-										if (lbl != null && lbl.Content is string) txt = (string)lbl.Content;
-										var run = child as System.Windows.Documents.Run;
-										if (run != null) txt = run.Text;
-									}
-									if (!string.IsNullOrEmpty(txt) && txt.Trim().Length > 0)
-									{
-										// Likely watermark text: NT default is instrument + period (e.g. "NQ 06-26  5 Min").
-										string instrumentName = null;
-										try { instrumentName = Instrument != null ? Instrument.FullName : null; } catch { }
-										if (!string.IsNullOrEmpty(instrumentName) && txt.IndexOf(instrumentName, StringComparison.OrdinalIgnoreCase) >= 0 && textsWithSymbol.Length < 400)
-										{
-											if (textsWithSymbol.Length > 0) textsWithSymbol.Append(" | ");
-											textsWithSymbol.Append(child.GetType().Name + "='" + txt.Replace('\n', ' ').Replace('\r', ' ') + "'");
-										}
-										if (textCount < 30 && textsAll.Length < 800)
-										{
-											if (textsAll.Length > 0) textsAll.Append(" | ");
-											string shortTxt = txt.Length > 40 ? txt.Substring(0, 40) + "..." : txt;
-											textsAll.Append(child.GetType().Name + "='" + shortTxt.Replace('\n', ' ').Replace('\r', ' ') + "'");
-											textCount++;
-										}
-									}
-								}
+								f.SetValue(props, " ");
+								if (actions.Length > 0) actions.Append("; ");
+								actions.Append("text=<space>");
 							}
 						}
-						if (_diagLog != null)
+						catch (Exception ex) { actions.Append("textErr=" + ex.Message); }
+
+						// 2) Replace the watermark brush field with a frozen brush
+						// whose color matches the chart background — so even if
+						// NT renders some default text, it draws background-on-
+						// background and is effectively invisible.
+						try
 						{
-							_diagLog.Log("UI", "WATERMARK_DUMP_NAMED", "totalNodes=" + totalNodes + " namedCount=" + namedCount + " names=[" + named.ToString() + "]");
-							_diagLog.Log("UI", "WATERMARK_DUMP_TEXTS", "textCount=" + textCount + " sample=[" + textsAll.ToString() + "]");
-							if (textsWithSymbol.Length > 0)
-								_diagLog.Log("UI", "WATERMARK_DUMP_MATCHES", "candidates=[" + textsWithSymbol.ToString() + "]");
-							else
-								_diagLog.Log("UI", "WATERMARK_DUMP_MATCHES", "(no TextBlock/Label/Run found containing the chart instrument name)");
+							var bf = t.GetField("dataSeriesWatermarkBrush",
+								BindingFlags.NonPublic | BindingFlags.Instance);
+							if (bf != null && typeof(System.Windows.Media.Brush).IsAssignableFrom(bf.FieldType))
+							{
+								System.Windows.Media.Color bg = System.Windows.Media.Colors.Black;
+								try
+								{
+									var bgBrush = t.GetProperty("ChartBackground", BindingFlags.Public | BindingFlags.Instance);
+									var got = bgBrush != null ? bgBrush.GetValue(props) as System.Windows.Media.SolidColorBrush : null;
+									if (got != null) bg = got.Color;
+								}
+								catch { }
+								var newBrush = new System.Windows.Media.SolidColorBrush(bg);
+								newBrush.Freeze();
+								bf.SetValue(props, newBrush);
+								if (actions.Length > 0) actions.Append("; ");
+								actions.Append("brush=#" + bg.A.ToString("X2") + bg.R.ToString("X2") + bg.G.ToString("X2") + bg.B.ToString("X2"));
+							}
 						}
+						catch (Exception ex)
+						{
+							if (actions.Length > 0) actions.Append("; ");
+							actions.Append("brushErr=" + ex.Message);
+						}
+
+						if (_diagLog != null)
+							_diagLog.Log("UI", "WATERMARK_FIELD_WRITE", actions.Length == 0 ? "(nothing written)" : actions.ToString());
+						_watermarkHidden = true;
 					}
 					catch (Exception ex)
 					{
-						try { if (_diagLog != null) _diagLog.Log("UI", "WATERMARK_DUMP_ERR", ex.Message); } catch { }
+						try { if (_diagLog != null) _diagLog.Log("UI", "WATERMARK_FIELD_WRITE_ERR", ex.Message); } catch { }
 					}
 				}));
 			}
