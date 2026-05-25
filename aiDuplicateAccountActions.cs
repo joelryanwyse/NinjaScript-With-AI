@@ -386,7 +386,7 @@ namespace NinjaTrader.NinjaScript.Indicators
 		// ── End cross-indicator shared registry ─────────────────────────
 
 		// Version string — read by the AddOn to set the window caption before the indicator loads
-		public static readonly string DashboardVersion = "26. 5. 25. 6";
+		public static readonly string DashboardVersion = "26. 5. 25. 7";
 
 		// ── WPF brush freezing helpers ────────────────────────────────
 		// NT 8.1.x flags an "unfrozen brush" error when any indicator-exposed
@@ -7696,13 +7696,16 @@ private void DumpInstanceFields(object obj, string label)
 		}
 
 		// NT 8.1.8+ added a "Data Series Watermark" option in Chart properties
-		// that overlays text on the chart by default. This indicator suppresses
-		// it by clearing any watermark text and forcing any watermark brush/color
-		// to transparent. Done via reflection so older NT builds (8.0.28 – 8.1.7)
-		// that don't expose these properties simply find no matching members and
-		// the call is a no-op. Idempotent — guarded by _watermarkSuppressed so we
-		// only walk reflection once per indicator load. Runs on the UI thread via
-		// SafeDispatch because ChartControl.Properties is a WPF object.
+		// that overlays text on the chart by default. Suppressed by clearing
+		// any watermark TEXT property — sufficient because an empty string
+		// stops the overlay from rendering, and avoids the side effect that
+		// triggered NT's "unfrozen brush" error when we previously also
+		// reflection-wrote Brushes.Transparent into watermark Brush DPs
+		// (v26.5.25.2 — confirmed in v26.5.25.6 binary test that disabling
+		// the Brush/Color writes stopped the error). Done via reflection so
+		// older NT builds (8.0.28 – 8.1.7) that don't expose any "Watermark*"
+		// property are a silent no-op. Idempotent via _watermarkSuppressed.
+		// Runs on the UI thread via SafeDispatch.
 		private bool _watermarkSuppressed = false;
 		private void SuppressDataSeriesWatermark()
 		{
@@ -7729,13 +7732,11 @@ private void DumpInstanceFields(object obj, string label)
 									if (pi == null || !pi.CanWrite) continue;
 									if (pi.GetIndexParameters().Length > 0) continue;
 									if (pi.Name.IndexOf("Watermark", StringComparison.OrdinalIgnoreCase) < 0) continue;
-									var pt = pi.PropertyType;
-									if (pt == typeof(string))
+									// Only clear text. Writing Brush/Color values touches NT's
+									// DependencyProperty change handler which logs an "unfrozen
+									// brush" error against the OLD watermark brush value.
+									if (pi.PropertyType == typeof(string))
 										pi.SetValue(host, string.Empty);
-									else if (typeof(System.Windows.Media.Brush).IsAssignableFrom(pt))
-										pi.SetValue(host, System.Windows.Media.Brushes.Transparent);
-									else if (pt == typeof(System.Windows.Media.Color))
-										pi.SetValue(host, System.Windows.Media.Colors.Transparent);
 								}
 								catch { }
 							}
@@ -9078,7 +9079,7 @@ private void DumpInstanceFields(object obj, string label)
 			{
 				Calculate					= Calculate.OnBarClose;
 				SetZOrder(-1);
-				// SuppressDataSeriesWatermark();  // DISABLED v26.5.25.6 — diagnostic test: is this the trigger for NT's "unfrozen brush" error?
+				SuppressDataSeriesWatermark();
 				LogBrushFreezeAudit("Historical");
 			}
 			else if (State == State.Terminated)
