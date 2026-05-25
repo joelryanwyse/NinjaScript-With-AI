@@ -386,7 +386,31 @@ namespace NinjaTrader.NinjaScript.Indicators
 		// ── End cross-indicator shared registry ─────────────────────────
 
 		// Version string — read by the AddOn to set the window caption before the indicator loads
-		public static readonly string DashboardVersion = "26. 5. 21. 1";
+		public static readonly string DashboardVersion = "26. 5. 25. 1";
+
+		// ── WPF brush freezing helpers ────────────────────────────────
+		// NT 8.1.x flags an "unfrozen brush" error when any indicator-exposed
+		// Brush property holds a WPF brush whose .IsFrozen == false. Pattern
+		// proven in aiEnhancedChartTrader.cs:
+		//   - field-init brushes:  FrozenRgbBrush(r, g, b)
+		//   - live setters:        set { pX = FreezeBrush(value); }
+		//   - deserializer setters: set { pX = FreezeBrush(Serialize.StringToBrush(value)); }
+		// Brushes.X built-ins are already frozen, no wrapping needed for those.
+		private static System.Windows.Media.Brush FreezeBrush(System.Windows.Media.Brush b)
+		{
+			if (b != null && b.CanFreeze && !b.IsFrozen)
+			{
+				try { b.Freeze(); } catch { /* non-fatal — just return unfrozen */ }
+			}
+			return b;
+		}
+
+		private static System.Windows.Media.Brush FrozenRgbBrush(byte r, byte g, byte b)
+		{
+			var br = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(r, g, b));
+			br.Freeze();
+			return br;
+		}
 
 		// ── Diagnostic Logger ────────────────────────────────────────────
 		// Always-on, buffered, file-based logger for troubleshooting.
@@ -6636,7 +6660,7 @@ private int RoundFollowerQtyForExecutionsMode(double exactQty)
 						{
 							//Print("setting b");
 							
-							return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(30,30,30));
+							return FrozenRgbBrush(30, 30, 30);
 							
 							//return Brushes.Silver;
 						}
@@ -18817,7 +18841,7 @@ private void BuildLoadedPropFirmsList()
 				// Sits between Goldenrod and DarkOrange for a warmer accent that
 				// reads as "gold with warmth" rather than pure yellow or coral.
 				PickerAccentBrushDX = CreateBrush(
-					new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(230, 150, 30)),
+					FrozenRgbBrush(230, 150, 30),
 					100/100f);
 				ChartTextBrushDXRed = CreateBrush(Brushes.Red, 100/100f);
 				TextBuyBrushDX = CreateBrush(pBackBuyColor3, 100/100f);
@@ -30956,6 +30980,11 @@ private void BuildLoadedPropFirmsList()
 			
 			
 			                    float FinalH = _btnSz.Height + _dpi6;
+			                    if (sizetx == pLatencyButtonString)
+			                    {
+			                    	SharpDX.Size2F _latRefSz = MeasureButtonText("A", ButtonText);
+			                    	FinalH = _latRefSz.Height + _dpi6;
+			                    }
 
 			                    FinalH = Math.Max(pButtonSize, FinalH) + pFontSizeB/2 + 3;
 			
@@ -42565,7 +42594,7 @@ if (thisbutton.Value.Text == "All Instruments")
 							var _separator = new Separator
 							{
 								Margin = new Thickness(0),
-								Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(61, 61, 66)),
+								Background = FrozenRgbBrush(61, 61, 66),
 								Height = 1
 							};
 							var _buttonBar = new StackPanel
@@ -48881,12 +48910,12 @@ private bool pResetDGDL = true;
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Rithmic Positions", Name = "Button Color", Order = 24)]
 		public Brush RefreshButtonBVV
 		{
-			get { return pRefreshButtonBVV; } set { pRefreshButtonBVV = value; }
+			get { return pRefreshButtonBVV; } set { pRefreshButtonBVV = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string RefreshButtonBVVS
 		{
-			get { return Serialize.BrushToString(pRefreshButtonBVV); } set { pRefreshButtonBVV = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pRefreshButtonBVV); } set { pRefreshButtonBVV = FreezeBrush(Serialize.StringToBrush(value)); }
 		}		
 		
 		
@@ -49002,12 +49031,12 @@ private bool pResetDGDL = true;
 		[Display(ResourceType = typeof(Custom.Resource), Name = "Color", GroupName = "Flatten Everything Button", Order = 11)]
 		public Brush FlattenButtonB
 		{
-			get { return pFlattenButtonB; } set { pFlattenButtonB = value; }
+			get { return pFlattenButtonB; } set { pFlattenButtonB = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string FlattenButtonBS
 		{
-			get { return Serialize.BrushToString(pFlattenButtonB); } set { pFlattenButtonB = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pFlattenButtonB); } set { pFlattenButtonB = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 		
 		
@@ -49530,7 +49559,7 @@ private bool pResetDGDL = true;
 		public string DashboardBackgroundS
 		{
 			get { return Serialize.BrushToString(pDashboardBackground); }
-			set { pDashboardBackground = Serialize.StringToBrush(value); }
+			set { pDashboardBackground = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 
 		private bool pActions2HideColumnEnabled = false;
@@ -49599,12 +49628,12 @@ private bool pResetDGDL = true;
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Window Display", Name = "Main Color", Order = 18)]
 		public Brush CompDNColor
 		{
-			get { return pCompDNColor; } set { pCompDNColor = value; }
+			get { return pCompDNColor; } set { pCompDNColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string CompDNColorS
 		{
-			get { return Serialize.BrushToString(pCompDNColor); } set { pCompDNColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pCompDNColor); } set { pCompDNColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 	
 		private int pCompMinOpacity = 20;
@@ -49636,30 +49665,30 @@ private bool pResetDGDL = true;
 //		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Window Display", Name = "Copier Off", Order = 40)]
 //		public Brush CopierButtonOff
 //		{
-//			get { return pCopierButtonOff; } set { pCopierButtonOff = value; }
+//			get { return pCopierButtonOff; } set { pCopierButtonOff = FreezeBrush(value); }
 //		}
 //		[Browsable(false)]
 //		public string CopierButtonOffS
 //		{
-//			get { return Serialize.BrushToString(pCopierButtonOff); } set { pCopierButtonOff = Serialize.StringToBrush(value); }
+//			get { return Serialize.BrushToString(pCopierButtonOff); } set { pCopierButtonOff = FreezeBrush(Serialize.StringToBrush(value)); }
 //		}		
 		
 		
 		
-		//private	Brush pBackMasterAAccountColor = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(30,30,30));
+		//private	Brush pBackMasterAAccountColor = FrozenRgbBrush(30, 30, 30);
 		//private Brush pBackMasterAAccountColor = Brushes.Sienna;
 		
-		private	Brush pBackMasterAAccountColor = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(130,80,45));
+		private	Brush pBackMasterAAccountColor = FrozenRgbBrush(130, 80, 45);
 		[XmlIgnore]
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Window Display", Name = "Master Account Color", Order = 40)]
 		public Brush BackMasterAAccountColor
 		{
-			get { return pBackMasterAAccountColor; } set { pBackMasterAAccountColor = value; }
+			get { return pBackMasterAAccountColor; } set { pBackMasterAAccountColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string BackMasterAAccountColorS
 		{
-			get { return Serialize.BrushToString(pBackMasterAAccountColor); } set { pBackMasterAAccountColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pBackMasterAAccountColor); } set { pBackMasterAAccountColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 		
 		
@@ -49668,12 +49697,12 @@ private bool pResetDGDL = true;
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Window Display", Name = "Follower Account Color", Order = 41)]
 		public Brush BackSlaveAccountColor
 		{
-			get { return pBackSlaveAccountColor; } set { pBackSlaveAccountColor = value; }
+			get { return pBackSlaveAccountColor; } set { pBackSlaveAccountColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string BackSlaveAccountColorS
 		{
-			get { return Serialize.BrushToString(pBackSlaveAccountColor); } set { pBackSlaveAccountColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pBackSlaveAccountColor); } set { pBackSlaveAccountColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 		
 	
@@ -49694,12 +49723,12 @@ private bool pResetDGDL = true;
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Window Display", Name = "Long Position Color", Order = 50)]
 		public Brush BackBuyColor
 		{
-			get { return pBackBuyColor; } set { pBackBuyColor = value; }
+			get { return pBackBuyColor; } set { pBackBuyColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string BackBuyColorS
 		{
-			get { return Serialize.BrushToString(pBackBuyColor); } set { pBackBuyColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pBackBuyColor); } set { pBackBuyColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 		
 		
@@ -49708,12 +49737,12 @@ private bool pResetDGDL = true;
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Window Display", Name = "Short Position Color", Order = 51)]
 		public Brush BackSellColor
 		{
-			get { return pBackSellColor; } set { pBackSellColor = value; }
+			get { return pBackSellColor; } set { pBackSellColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string BackSellColorS
 		{
-			get { return Serialize.BrushToString(pBackSellColor); } set { pBackSellColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pBackSellColor); } set { pBackSellColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 		
 		
@@ -49726,12 +49755,12 @@ private bool pResetDGDL = true;
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Window Display", Name = "PNL Text Color Positive", Order = 52)]
 		public Brush BackBuyColor3
 		{
-			get { return pBackBuyColor3; } set { pBackBuyColor3 = value; }
+			get { return pBackBuyColor3; } set { pBackBuyColor3 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string BackBuyColor3S
 		{
-			get { return Serialize.BrushToString(pBackBuyColor3); } set { pBackBuyColor3 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pBackBuyColor3); } set { pBackBuyColor3 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 		
 		
@@ -49740,12 +49769,12 @@ private bool pResetDGDL = true;
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Window Display", Name = "PNL Text Color Negative", Order = 53)]
 		public Brush BackSellColor3
 		{
-			get { return pBackSellColor3; } set { pBackSellColor3 = value; }
+			get { return pBackSellColor3; } set { pBackSellColor3 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string BackSellColor3S
 		{
-			get { return Serialize.BrushToString(pBackSellColor3); } set { pBackSellColor3 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pBackSellColor3); } set { pBackSellColor3 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 		
 		
@@ -49768,12 +49797,12 @@ private bool pResetDGDL = true;
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Window Display", Name = "Connected Status (Yes)", Order = 55)]
 		public Brush ConnectedOn
 		{
-			get { return pConnectedOn; } set { pConnectedOn = value; }
+			get { return pConnectedOn; } set { pConnectedOn = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string pConnectedOnS
 		{
-			get { return Serialize.BrushToString(pConnectedOn); } set { pConnectedOn = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pConnectedOn); } set { pConnectedOn = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 				
 	
@@ -49782,12 +49811,12 @@ private bool pResetDGDL = true;
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Window Display", Name = "Connected Status (No)", Order = 56)]
 		public Brush ConnectedOff
 		{
-			get { return pConnectedOff; } set { pConnectedOff = value; }
+			get { return pConnectedOff; } set { pConnectedOff = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string pConnectedOffS
 		{
-			get { return Serialize.BrushToString(pConnectedOff); } set { pConnectedOff = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pConnectedOff); } set { pConnectedOff = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 				
 		
@@ -49797,12 +49826,12 @@ private bool pResetDGDL = true;
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Window Display", Name = "Connected Status (Lost)", Order = 57)]
 		public Brush ConnectedLost
 		{
-			get { return pConnectedLost; } set { pConnectedLost = value; }
+			get { return pConnectedLost; } set { pConnectedLost = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ConnectedLostS
 		{
-			get { return Serialize.BrushToString(pConnectedLost); } set { pConnectedLost = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pConnectedLost); } set { pConnectedLost = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 		
 		
@@ -49812,12 +49841,12 @@ private bool pResetDGDL = true;
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Window Display", Name = "Connected Status (Other)", Order = 58)]
 		public Brush ConnectedOther
 		{
-			get { return pConnectedOther; } set { pConnectedOther = value; }
+			get { return pConnectedOther; } set { pConnectedOther = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string pConnectedOtherS
 		{
-			get { return Serialize.BrushToString(pConnectedOther); } set { pConnectedOther = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pConnectedOther); } set { pConnectedOther = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 						
 		
@@ -49835,12 +49864,12 @@ private bool pResetDGDL = true;
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Window Display", Name = "Account Status (Funded)", Order = 67)]
 		public Brush AccountCFunded
 		{
-			get { return pAccountCFunded; } set { pAccountCFunded = value; }
+			get { return pAccountCFunded; } set { pAccountCFunded = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string AccountCFundedS
 		{
-			get { return Serialize.BrushToString(pAccountCFunded); } set { pAccountCFunded = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pAccountCFunded); } set { pAccountCFunded = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 		
 		
@@ -49850,12 +49879,12 @@ private bool pResetDGDL = true;
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Window Display", Name = "Account Status (Evaluation)", Order = 68)]
 		public Brush AccountEvaluation
 		{
-			get { return pAccountEvaluation; } set { pAccountEvaluation = value; }
+			get { return pAccountEvaluation; } set { pAccountEvaluation = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string pAccountEvaluationS
 		{
-			get { return Serialize.BrushToString(pAccountEvaluation); } set { pAccountEvaluation = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pAccountEvaluation); } set { pAccountEvaluation = FreezeBrush(Serialize.StringToBrush(value)); }
 		}		
 						
 	
@@ -49864,12 +49893,12 @@ private bool pResetDGDL = true;
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Window Display", Name = "Account Status (Simulated)", Order = 69)]
 		public Brush AccountConfiguredSim
 		{
-			get { return pAccountConfiguredSim; } set { pAccountConfiguredSim = value; }
+			get { return pAccountConfiguredSim; } set { pAccountConfiguredSim = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string AccountConfiguredSimS
 		{
-			get { return Serialize.BrushToString(pAccountConfiguredSim); } set { pAccountConfiguredSim = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pAccountConfiguredSim); } set { pAccountConfiguredSim = FreezeBrush(Serialize.StringToBrush(value)); }
 		}				
 	
 		
@@ -52239,12 +52268,12 @@ private bool pResetDGDL = true;
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Account Risk Manager", Name = "Background Color (Good)", Order = 75)]
 		public Brush TrailingGoodColor
 		{
-			get { return pTrailingGoodColor; } set { pTrailingGoodColor = value; }
+			get { return pTrailingGoodColor; } set { pTrailingGoodColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string TrailingGoodColorS
 		{
-			get { return Serialize.BrushToString(pTrailingGoodColor); } set { pTrailingGoodColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pTrailingGoodColor); } set { pTrailingGoodColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 		
 			
@@ -52254,12 +52283,12 @@ private bool pResetDGDL = true;
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Account Risk Manager", Name = "Background Color (Warning 1)", Order = 76)]
 		public Brush TrailingWarningColor
 		{
-			get { return pTrailingWarningColor; } set { pTrailingWarningColor = value; }
+			get { return pTrailingWarningColor; } set { pTrailingWarningColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string TrailingWarningColorS
 		{
-			get { return Serialize.BrushToString(pTrailingWarningColor); } set { pTrailingWarningColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pTrailingWarningColor); } set { pTrailingWarningColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 		
 
@@ -52268,12 +52297,12 @@ private bool pResetDGDL = true;
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Account Risk Manager", Name = "Background Color (Warning 2)", Order = 77)]
 		public Brush TrailingBadColor
 		{
-			get { return pTrailingBadColor; } set { pTrailingBadColor = value; }
+			get { return pTrailingBadColor; } set { pTrailingBadColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string TrailingBadColorS
 		{
-			get { return Serialize.BrushToString(pTrailingBadColor); } set { pTrailingBadColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pTrailingBadColor); } set { pTrailingBadColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 				
 		private Brush pTrailingBlownColor = Brushes.Brown;
@@ -52281,12 +52310,12 @@ private bool pResetDGDL = true;
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Account Risk Manager", Name = "Background Color (Closed)", Order = 78)]
 		public Brush TrailingBlownColor
 		{
-			get { return pTrailingBlownColor; } set { pTrailingBlownColor = value; }
+			get { return pTrailingBlownColor; } set { pTrailingBlownColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string TrailingBlownColorS
 		{
-			get { return Serialize.BrushToString(pTrailingBlownColor); } set { pTrailingBlownColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pTrailingBlownColor); } set { pTrailingBlownColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}		
 		
 		
@@ -52297,12 +52326,12 @@ private bool pResetDGDL = true;
 			[Display(ResourceType = typeof(Custom.Resource), GroupName = "Account Risk Manager", Name = "Background Color (Daily Goal / Funded)", Order = 81)]
 			public Brush IsFundedColor
 			{
-				get { return pIsFundedColor; } set { pIsFundedColor = value; }
+				get { return pIsFundedColor; } set { pIsFundedColor = FreezeBrush(value); }
 			}
 			[Browsable(false)]
 			public string IsFundedColorS
 			{
-				get { return Serialize.BrushToString(pIsFundedColor); } set { pIsFundedColor = Serialize.StringToBrush(value); }
+				get { return Serialize.BrushToString(pIsFundedColor); } set { pIsFundedColor = FreezeBrush(Serialize.StringToBrush(value)); }
 			}	
 		
 		
@@ -52311,12 +52340,12 @@ private bool pResetDGDL = true;
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Account Risk Manager", Name = "Background Color (Daily Loss)", Order = 82)]
 		public Brush IsLossColor
 		{
-			get { return pIsLossColor; } set { pIsLossColor = value; }
+			get { return pIsLossColor; } set { pIsLossColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string IsLossColorS
 		{
-			get { return Serialize.BrushToString(pIsLossColor); } set { pIsLossColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pIsLossColor); } set { pIsLossColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 				
 					
@@ -52483,12 +52512,12 @@ private bool pResetDGDL = true;
 //			[Display(ResourceType = typeof(Custom.Resource), GroupName = "Window Display", Name = "Text Color", Description = "", Order = 30)]
 //			public System.Windows.Media.Brush ColorTextBrush
 //			{
-//				get { return pColorTextBrush; } set { pColorTextBrush = value; }
+//				get { return pColorTextBrush; } set { pColorTextBrush = FreezeBrush(value); }
 //			}
 //			[Browsable(false)]
 //			public string ColorTextBrushS
 //			{
-//				get { return Serialize.BrushToString(pColorTextBrush); } set { pColorTextBrush = Serialize.StringToBrush(value); }
+//				get { return Serialize.BrushToString(pColorTextBrush); } set { pColorTextBrush = FreezeBrush(Serialize.StringToBrush(value)); }
 //			}	
 	
 	
@@ -52569,12 +52598,12 @@ private bool pResetDGDL = true;
 		[Display(ResourceType = typeof(Custom.Resource), Name = "Copier Is On - Color", GroupName = "Control Buttons", Order = 1)]
 		public Brush CopierButtonOn2
 		{
-			get { return pCopierButtonOn2; } set { pCopierButtonOn2 = value; }
+			get { return pCopierButtonOn2; } set { pCopierButtonOn2 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string CopierButtonOn2S
 		{
-			get { return Serialize.BrushToString(pCopierButtonOn2); } set { pCopierButtonOn2 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pCopierButtonOn2); } set { pCopierButtonOn2 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}		
 		
         [XmlIgnore]
@@ -52599,7 +52628,7 @@ private bool pResetDGDL = true;
         public string AreaBrushSerialize
         {
             get { return Serialize.BrushToString(AreaBrush); }
-            set { AreaBrush = Serialize.StringToBrush(value); }
+            set { AreaBrush = FreezeBrush(Serialize.StringToBrush(value)); }
         }
 
         [Range(0, 100)]
@@ -52977,12 +53006,12 @@ private bool pResetDGDL = true;
 		[Display(ResourceType = typeof(Custom.Resource), Name = "Buy Signal Background", Description = "", GroupName = "Signal Alerts", Order = 6)]
 		public Brush ArrowUpFBrush
 		{
-			get { return pArrowUpFBrush; } set { pArrowUpFBrush = value; }
+			get { return pArrowUpFBrush; } set { pArrowUpFBrush = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ArrowUpFBrushS
 		{
-			get { return Serialize.BrushToString(pArrowUpFBrush); } set { pArrowUpFBrush = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pArrowUpFBrush); } set { pArrowUpFBrush = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 		
 		private string pWAVFileName2 = "Alert2.wav";
@@ -53000,12 +53029,12 @@ private bool pResetDGDL = true;
 		[Display(ResourceType = typeof(Custom.Resource), Name = "Sell Signal Background", Description = "", GroupName = "Signal Alerts", Order = 8)]
 		public Brush ArrowDownFBrush
 		{
-			get { return pArrowDownFBrush; } set { pArrowDownFBrush = value; }
+			get { return pArrowDownFBrush; } set { pArrowDownFBrush = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ArrowDownFBrushS
 		{
-			get { return Serialize.BrushToString(pArrowDownFBrush); } set { pArrowDownFBrush = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pArrowDownFBrush); } set { pArrowDownFBrush = FreezeBrush(Serialize.StringToBrush(value)); }
 		}			
 		
 		
@@ -54277,7 +54306,7 @@ private Brush GetTextColor(Brush bg2)
         if (skinname == "NinjaTrader Dark" || skinname == "Dark" || skinname == "Slate Dark" || skinname == "Slate Gray")
         {
            // return Brushes.WhiteSmoke;
-			return new SolidColorBrush(Color.FromRgb(220, 220, 220));
+			return FrozenRgbBrush(220, 220, 220);
         }
         else
         {
@@ -54291,7 +54320,7 @@ private Brush GetTextColor(Brush bg2)
             return Brushes.Black;
         else
            // return Brushes.WhiteSmoke;
-			return new SolidColorBrush(Color.FromRgb(220, 220, 220));
+			return FrozenRgbBrush(220, 220, 220);
     }
 }
 		
@@ -54309,7 +54338,7 @@ private Brush GetThemeTextBrush()
     
 //    if (skinname == "NinjaTrader Dark" || skinname == "Dark" || skinname == "Slate Dark" || skinname == "Slate Gray")
 //    {
-//        return new SolidColorBrush(Color.FromRgb(45, 45, 48)); // Dark background
+//        return FrozenRgbBrush(45, 45, 48); // Dark background
 //    }
 //    else
 //    {
@@ -54323,11 +54352,11 @@ private Brush GetThemeTextBrush()
     
 //    if (skinname == "NinjaTrader Dark" || skinname == "Dark" || skinname == "Slate Dark" || skinname == "Slate Gray")
 //    {
-//        return new SolidColorBrush(Color.FromRgb(63, 63, 70)); // Dark border
+//        return FrozenRgbBrush(63, 63, 70); // Dark border
 //    }
 //    else
 //    {
-//        return new SolidColorBrush(Color.FromRgb(204, 204, 204)); // Light border
+//        return FrozenRgbBrush(204, 204, 204); // Light border
 //    }
 //}
 
@@ -54630,9 +54659,9 @@ private ComboBox CreateStyledComboBox()
         FontSize = 12,
         Padding = new Thickness(4, 3, 4, 2),
         VerticalContentAlignment = VerticalAlignment.Center,
-       // Background = new SolidColorBrush(Color.FromRgb(51, 51, 55)),
+       // Background = FrozenRgbBrush(51, 51, 55),
         //Foreground = Brushes.WhiteSmoke,
-        //BorderBrush = new SolidColorBrush(Color.FromRgb(63, 63, 70)),
+        //BorderBrush = FrozenRgbBrush(63, 63, 70),
         BorderThickness = new Thickness(1)
     };
     
@@ -54785,12 +54814,12 @@ public void SetStatusLabel(int fieldNumber, bool isVisible, bool isGreen)
         if (isGreen)
         {
             // Green checkmark
-            statusLabel.Foreground = new SolidColorBrush(Color.FromRgb(0, 200, 0));
+            statusLabel.Foreground = FrozenRgbBrush(0, 200, 0);
         }
         else
         {
             // Gray checkmark
-            statusLabel.Foreground = new SolidColorBrush(Color.FromRgb(128, 128, 128));
+            statusLabel.Foreground = FrozenRgbBrush(128, 128, 128);
         }
     }
 }
@@ -55993,7 +56022,7 @@ public static SimplePopupWindow ShowPopup(string windowTitle = "Simple Input Win
 			var separator = new Separator
 			{
 				Margin = new Thickness(0),
-				Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(61, 61, 66)),
+				Background = FrozenRgbBrush(61, 61, 66),
 				Height = 1
 			};
 
