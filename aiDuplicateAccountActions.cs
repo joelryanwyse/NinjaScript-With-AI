@@ -386,7 +386,7 @@ namespace NinjaTrader.NinjaScript.Indicators
 		// ── End cross-indicator shared registry ─────────────────────────
 
 		// Version string — read by the AddOn to set the window caption before the indicator loads
-		public static readonly string DashboardVersion = "26. 5. 25. 4";
+		public static readonly string DashboardVersion = "26. 5. 25. 5";
 
 		// ── WPF brush freezing helpers ────────────────────────────────
 		// NT 8.1.x flags an "unfrozen brush" error when any indicator-exposed
@@ -7748,68 +7748,116 @@ private void DumpInstanceFields(object obj, string label)
 			catch { }
 		}
 
-		// TEMPORARY DIAGNOSTIC (v26.5.25.3) — same as the ECT audit. NT's
-		// "unfrozen brush" error is a generic one-liner with no stack trace;
-		// this walks every public property on the indicator, checks any direct
-		// Brush value AND any nested .Brush member (Stroke, Pen), and logs the
-		// names of properties whose brush is not Frozen. Pull this once the
-		// freeze bug is closed.
+		// TEMPORARY DIAGNOSTIC (v26.5.25.3+) — V2 walks PROPERTIES + FIELDS
+		// (instance and static) AND recurses one level into property values
+		// that have a .Brush member, so we also catch unfrozen brushes held
+		// inside non-Brush types like Stroke/Pen plus brushes living on
+		// nested objects exposed via the indicator's property surface. Also
+		// dumps NT's ChartControl + ChartControl.Properties watermark-prop
+		// brushes so we can see if SuppressDataSeriesWatermark is triggering
+		// the NT error.
 		private void LogBrushFreezeAudit(string when)
 		{
 			try
 			{
 				if (_diagLog == null) return;
-				var props = this.GetType().GetProperties(
-					BindingFlags.Public | BindingFlags.Instance);
+				var t = this.GetType();
 				var sb = new StringBuilder();
 				int unfrozen = 0;
-				int brushProps = 0;
-				int nestedBrushProps = 0;
+				int total = 0;
+
+				// 1) Public instance properties (direct Brush + nested .Brush).
+				var props = t.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 				foreach (var p in props)
 				{
 					if (!p.CanRead) continue;
 					if (p.GetIndexParameters().Length > 0) continue;
-					object value;
-					try { value = p.GetValue(this); }
-					catch { continue; }
-					if (value == null) continue;
+					object v; try { v = p.GetValue(this); } catch { continue; }
+					AuditOne("prop:" + p.Name, v, sb, ref total, ref unfrozen);
+				}
 
-					var directBrush = value as System.Windows.Media.Brush;
-					if (directBrush != null)
-					{
-						brushProps++;
-						if (!directBrush.IsFrozen)
-						{
-							if (unfrozen > 0) sb.Append(", ");
-							sb.Append(p.Name);
-							unfrozen++;
-						}
-						continue;
-					}
+				// 2) ALL fields (public, private, static) of Brush type.
+				var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+				var fields = t.GetFields(flags);
+				foreach (var fi in fields)
+				{
+					if (!typeof(System.Windows.Media.Brush).IsAssignableFrom(fi.FieldType)) continue;
+					object v; try { v = fi.GetValue(this); } catch { continue; }
+					AuditOne("field:" + fi.Name, v, sb, ref total, ref unfrozen);
+				}
 
-					var brushMember = value.GetType().GetProperty("Brush",
-						BindingFlags.Public | BindingFlags.Instance);
-					if (brushMember != null && typeof(System.Windows.Media.Brush).IsAssignableFrom(brushMember.PropertyType))
+				// 3) NT ChartControl watermark properties (these are touched
+				// by SuppressDataSeriesWatermark — if any of their current
+				// brush values are unfrozen, NT logs the error during the
+				// suppressor's write).
+				int watermarkUnfrozen = 0;
+				var watermarkSb = new StringBuilder();
+				if (ChartControl != null)
+				{
+					var hosts = new List<object> { ChartControl };
+					try { var cp = ChartControl.Properties; if (cp != null) hosts.Add(cp); } catch { }
+					foreach (var host in hosts)
 					{
-						nestedBrushProps++;
-						System.Windows.Media.Brush innerBrush = null;
-						try { innerBrush = brushMember.GetValue(value) as System.Windows.Media.Brush; }
-						catch { continue; }
-						if (innerBrush != null && !innerBrush.IsFrozen)
+						if (host == null) continue;
+						PropertyInfo[] members;
+						try { members = host.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance); } catch { continue; }
+						foreach (var pi in members)
 						{
-							if (unfrozen > 0) sb.Append(", ");
-							sb.Append(p.Name + ".Brush");
-							unfrozen++;
+							if (pi.GetIndexParameters().Length > 0) continue;
+							if (pi.Name.IndexOf("Watermark", StringComparison.OrdinalIgnoreCase) < 0) continue;
+							if (!typeof(System.Windows.Media.Brush).IsAssignableFrom(pi.PropertyType)) continue;
+							object v; try { v = pi.GetValue(host); } catch { continue; }
+							var b = v as System.Windows.Media.Brush;
+							if (b != null && !b.IsFrozen)
+							{
+								if (watermarkUnfrozen > 0) watermarkSb.Append(", ");
+								watermarkSb.Append(host.GetType().Name + "." + pi.Name);
+								watermarkUnfrozen++;
+							}
 						}
 					}
 				}
+
 				_diagLog.Log("RENDER", "BrushAudit_" + when,
-					"brushProps=" + brushProps + " nestedBrushProps=" + nestedBrushProps +
-					" unfrozen=" + unfrozen + (unfrozen > 0 ? " props=[" + sb.ToString() + "]" : ""));
+					"total=" + total + " unfrozen=" + unfrozen +
+					" watermarkUnfrozen=" + watermarkUnfrozen +
+					(unfrozen > 0 ? " props=[" + sb.ToString() + "]" : "") +
+					(watermarkUnfrozen > 0 ? " watermark=[" + watermarkSb.ToString() + "]" : ""));
 			}
 			catch (Exception ex)
 			{
 				try { if (_diagLog != null) _diagLog.Log("RENDER", "BRUSH_AUDIT_ERR", ex.Message); } catch { }
+			}
+		}
+
+		private void AuditOne(string label, object value, StringBuilder sb, ref int total, ref int unfrozen)
+		{
+			if (value == null) return;
+			var direct = value as System.Windows.Media.Brush;
+			if (direct != null)
+			{
+				total++;
+				if (!direct.IsFrozen)
+				{
+					if (unfrozen > 0) sb.Append(", ");
+					sb.Append(label);
+					unfrozen++;
+				}
+				return;
+			}
+			// Probe for a .Brush member (Stroke, Pen, etc.)
+			var brushMember = value.GetType().GetProperty("Brush", BindingFlags.Public | BindingFlags.Instance);
+			if (brushMember != null && typeof(System.Windows.Media.Brush).IsAssignableFrom(brushMember.PropertyType))
+			{
+				total++;
+				System.Windows.Media.Brush inner = null;
+				try { inner = brushMember.GetValue(value) as System.Windows.Media.Brush; } catch { return; }
+				if (inner != null && !inner.IsFrozen)
+				{
+					if (unfrozen > 0) sb.Append(", ");
+					sb.Append(label + ".Brush");
+					unfrozen++;
+				}
 			}
 		}
 
@@ -7877,6 +7925,7 @@ private void DumpInstanceFields(object obj, string label)
 			}
 			else if (State == State.Configure)
 		    {
+				LogBrushFreezeAudit("Configure");
  				IsAutoScale = false;
 				
 				// Ensure TLS 1.2 for outbound HTTPS so VPS/firewalls that block older protocols can connect to your servers
@@ -8058,6 +8107,7 @@ private void DumpInstanceFields(object obj, string label)
 					string instanceTag = "inst-" + ((uint)_instanceId).ToString("x8");
 					_diagLog = new DiagnosticLogger(diagLogDir, instanceTag);
 					_diagLog.Log("SYSTEM", "INIT", "InstanceId=" + _instanceId + "|Tag=" + instanceTag + "|Version=" + DashboardVersion + "|Machine=" + (NinjaTrader.Cbi.License.MachineId ?? "?"));
+					LogBrushFreezeAudit("DataLoaded");
 				}
 				catch { }
 
