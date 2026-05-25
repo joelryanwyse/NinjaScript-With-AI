@@ -386,7 +386,7 @@ namespace NinjaTrader.NinjaScript.Indicators
 		// ── End cross-indicator shared registry ─────────────────────────
 
 		// Version string — read by the AddOn to set the window caption before the indicator loads
-		public static readonly string DashboardVersion = "26. 5. 25. 13";
+		public static readonly string DashboardVersion = "26. 5. 25. 14";
 
 		// ── WPF brush freezing helpers ────────────────────────────────
 		// NT 8.1.x flags an "unfrozen brush" error when any indicator-exposed
@@ -7719,7 +7719,7 @@ private void DumpInstanceFields(object obj, string label)
 						try
 						{
 							var parentWin = System.Windows.Window.GetWindow(ChartControl);
-							if (parentWin != null && parentWin != ChartControl) roots.Add(parentWin);
+							if (parentWin != null && !object.ReferenceEquals(parentWin, ChartControl)) roots.Add(parentWin);
 						}
 						catch { }
 						var named = new StringBuilder();
@@ -7766,7 +7766,7 @@ private void DumpInstanceFields(object obj, string label)
 									{
 										// Likely watermark text: NT default is instrument + period (e.g. "NQ 06-26  5 Min").
 										string instrumentName = null;
-										try { instrumentName = ChartControl != null && ChartControl.Instruments != null && ChartControl.Instruments.Count > 0 ? ChartControl.Instruments[0].FullName : null; } catch { }
+										try { instrumentName = Instrument != null ? Instrument.FullName : null; } catch { }
 										if (!string.IsNullOrEmpty(instrumentName) && txt.IndexOf(instrumentName, StringComparison.OrdinalIgnoreCase) >= 0 && textsWithSymbol.Length < 400)
 										{
 											if (textsWithSymbol.Length > 0) textsWithSymbol.Append(" | ");
