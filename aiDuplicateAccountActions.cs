@@ -386,7 +386,7 @@ namespace NinjaTrader.NinjaScript.Indicators
 		// ── End cross-indicator shared registry ─────────────────────────
 
 		// Version string — read by the AddOn to set the window caption before the indicator loads
-		public static readonly string DashboardVersion = "26. 5. 25. 9";
+		public static readonly string DashboardVersion = "26. 5. 25. 10";
 
 		// ── WPF brush freezing helpers ────────────────────────────────
 		// NT 8.1.x flags an "unfrozen brush" error when any indicator-exposed
@@ -7695,6 +7695,72 @@ private void DumpInstanceFields(object obj, string label)
 			}
 		}
 
+		// Hide the NT 8.1.8+ "Data Series Watermark" overlay by walking the
+		// ChartControl's WPF visual tree and Collapsing any FrameworkElement
+		// whose Name contains "Watermark". Setting Visibility is an enum DP,
+		// not a Brush DP — avoids the trigger that broke the previous
+		// reflection-write approach (v26.5.25.2-9 saga).
+		//
+		// Scheduled via Dispatcher.BeginInvoke at ContextIdle priority so the
+		// chart's layout pass has completed and the watermark element has
+		// been created before we walk. Idempotent via _watermarkHidden.
+		private bool _watermarkHidden = false;
+		private void HideDataSeriesWatermarkVisual()
+		{
+			if (_watermarkHidden) return;
+			try
+			{
+				var disp = ChartControl != null ? ChartControl.Dispatcher : null;
+				if (disp == null) return;
+				disp.BeginInvoke(System.Windows.Threading.DispatcherPriority.ContextIdle, new Action(() =>
+				{
+					try
+					{
+						if (ChartControl == null) return;
+						int hiddenCount = 0;
+						var found = new StringBuilder();
+						var stack = new Stack<System.Windows.DependencyObject>();
+						stack.Push(ChartControl);
+						while (stack.Count > 0)
+						{
+							var node = stack.Pop();
+							int count;
+							try { count = System.Windows.Media.VisualTreeHelper.GetChildrenCount(node); }
+							catch { continue; }
+							for (int i = 0; i < count; i++)
+							{
+								System.Windows.DependencyObject child;
+								try { child = System.Windows.Media.VisualTreeHelper.GetChild(node, i); }
+								catch { continue; }
+								if (child == null) continue;
+								var fe = child as System.Windows.FrameworkElement;
+								if (fe != null && !string.IsNullOrEmpty(fe.Name) &&
+									fe.Name.IndexOf("Watermark", StringComparison.OrdinalIgnoreCase) >= 0)
+								{
+									try { fe.Visibility = System.Windows.Visibility.Collapsed; hiddenCount++; }
+									catch { }
+									if (found.Length > 0) found.Append(", ");
+									found.Append(fe.GetType().Name + "[" + fe.Name + "]");
+									continue; // don't recurse into hidden subtree
+								}
+								stack.Push(child);
+							}
+						}
+						if (_diagLog != null)
+							_diagLog.Log("UI", "WATERMARK_VISUAL_HIDE",
+								"hidden=" + hiddenCount +
+								(hiddenCount > 0 ? " elements=[" + found.ToString() + "]" : " (no FrameworkElement with Name containing 'Watermark' found in visual tree)"));
+						if (hiddenCount > 0) _watermarkHidden = true;
+					}
+					catch (Exception ex)
+					{
+						try { if (_diagLog != null) _diagLog.Log("UI", "WATERMARK_VISUAL_HIDE_ERR", ex.Message); } catch { }
+					}
+				}));
+			}
+			catch { }
+		}
+
 		protected override void OnStateChange()
 		{
 			// Outer try/catch so a cross-thread or other exception in any state
@@ -7844,6 +7910,10 @@ private void DumpInstanceFields(object obj, string label)
 				SelectedATMTime            = DateTime.MinValue;
 				SelectedPayoutAccount      = string.Empty;
 				SelectedPayoutTime         = DateTime.MinValue;
+
+				// Hide NT's data series watermark via the WPF visual tree (no DP-write
+				// approach to avoid the v26.5.25.2-9 unfrozen-brush trigger).
+				HideDataSeriesWatermarkVisual();
 
 				// Close the IsInActiveWorkspace startup race: OnTimerTick3 sets this flag
 				// every 250ms via the same comparison below, but the 0-250ms gap between
@@ -12581,16 +12651,21 @@ private void BuildLoadedPropFirmsList()
 				
 				if (!ForceAllAccountsToBeListed)
 				{
-				
+
 					if (pAllowDisconnectedAccounts)
 						if (!AccountIsNowConnected)
 						if (!AccountHasBeenSaved(accccnnnn))
-							continue;
-						
+							// Allow unsaved disconnected accounts through only when there is
+							// at least one currently-connected account on the machine — when
+							// zero accounts are connected (fresh install, firm down, internet
+							// down), show every NT-visible account so the dashboard isn't blank.
+							if (AllConnectedAccounts.Count > 0)
+								continue;
+
 						if (!pAllowDisconnectedAccounts)
 						if (!AccountIsNowConnected)
-							continue;				
-						
+							continue;
+
 				}
 						
 				
