@@ -222,7 +222,7 @@ namespace NinjaTrader.NinjaScript.Indicators
 		
 	
 		private string ThisName = "aiEnhancedChartTrader";
-		private string pCurrentVersionName = "26. 5. 25. 3";
+		private string pCurrentVersionName = "26. 5. 25. 4";
 		private string pServerVersionString = "";
 		private string pServerDownloadUrl = "";
 		private string pServerChangelog = "";
@@ -42069,11 +42069,13 @@ foreach (Order or in myAccount.Orders.ToList())
 			LogDiag(category, "ERROR " + context, "Type=" + ex.GetType().Name + ", Msg=" + ex.Message);
 		}
 
-		// TEMPORARY DIAGNOSTIC (v26.5.25.3) — enumerate every public Brush
-		// property on the indicator and log the names of any that are not
-		// Frozen. NT's "unfrozen brush" error is a generic one-liner with
-		// no stack trace; this tells us which property is the offender.
-		// Pull this once the freeze bug is closed.
+		// TEMPORARY DIAGNOSTIC (v26.5.25.3+) — enumerate every Brush-bearing
+		// public property on the indicator and log the names of any whose
+		// brush is not Frozen. v.3 only walked direct `Brush` props; v.4
+		// also walks nested .Brush members on objects like Stroke/Pen.
+		// NT's "unfrozen brush" error is a generic one-liner with no stack
+		// trace; this tells us which property is the offender. Pull this
+		// once the freeze bug is closed.
 		private void LogBrushFreezeAudit(string when)
 		{
 			try
@@ -42083,26 +42085,51 @@ foreach (Order or in myAccount.Orders.ToList())
 					System.Reflection.BindingFlags.Instance);
 				var sb = new System.Text.StringBuilder();
 				int unfrozen = 0;
-				int total = 0;
+				int brushProps = 0;
+				int nestedBrushProps = 0;
 				foreach (var p in props)
 				{
-					if (!typeof(System.Windows.Media.Brush).IsAssignableFrom(p.PropertyType)) continue;
 					if (!p.CanRead) continue;
 					if (p.GetIndexParameters().Length > 0) continue;
 					object value;
 					try { value = p.GetValue(this); }
 					catch { continue; }
-					var brush = value as System.Windows.Media.Brush;
-					if (brush == null) continue;
-					total++;
-					if (!brush.IsFrozen)
+					if (value == null) continue;
+
+					// Direct Brush property.
+					var directBrush = value as System.Windows.Media.Brush;
+					if (directBrush != null)
 					{
-						if (unfrozen > 0) sb.Append(", ");
-						sb.Append(p.Name);
-						unfrozen++;
+						brushProps++;
+						if (!directBrush.IsFrozen)
+						{
+							if (unfrozen > 0) sb.Append(", ");
+							sb.Append(p.Name);
+							unfrozen++;
+						}
+						continue;
+					}
+
+					// Nested .Brush member (Stroke, Pen, anything with a Brush prop).
+					var brushMember = value.GetType().GetProperty("Brush",
+						System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+					if (brushMember != null && typeof(System.Windows.Media.Brush).IsAssignableFrom(brushMember.PropertyType))
+					{
+						nestedBrushProps++;
+						System.Windows.Media.Brush innerBrush = null;
+						try { innerBrush = brushMember.GetValue(value) as System.Windows.Media.Brush; }
+						catch { continue; }
+						if (innerBrush != null && !innerBrush.IsFrozen)
+						{
+							if (unfrozen > 0) sb.Append(", ");
+							sb.Append(p.Name + ".Brush");
+							unfrozen++;
+						}
 					}
 				}
-				LogDiag("RENDER", "BrushAudit_" + when, "total=" + total + " unfrozen=" + unfrozen + (unfrozen > 0 ? " props=[" + sb.ToString() + "]" : ""));
+				LogDiag("RENDER", "BrushAudit_" + when,
+					"brushProps=" + brushProps + " nestedBrushProps=" + nestedBrushProps +
+					" unfrozen=" + unfrozen + (unfrozen > 0 ? " props=[" + sb.ToString() + "]" : ""));
 			}
 			catch (Exception ex)
 			{
