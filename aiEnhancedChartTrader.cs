@@ -222,7 +222,7 @@ namespace NinjaTrader.NinjaScript.Indicators
 		
 	
 		private string ThisName = "aiEnhancedChartTrader";
-		private string pCurrentVersionName = "26. 5. 25. 1";
+		private string pCurrentVersionName = "26. 5. 25. 2";
 		private string pServerVersionString = "";
 		private string pServerDownloadUrl = "";
 		private string pServerChangelog = "";
@@ -966,7 +966,7 @@ private int ATMSelectionCount = 0;
 		
 		//private Brush ButtonBrush = Brushes.DarkGreen;
 		private Brush ButtonBrush2 = Brushes.Black;
-		private Brush ControlBorderBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(20, 20, 20));
+		private Brush ControlBorderBrush = FrozenRgbBrush(20, 20, 20);
 		private int smallControlHeight = 21; // height for ComboBoxes, spinners, small buttons — updated in CreateWPFOrderControls
 		private int primaryFontSize = 12; // auto-derived from pPrimaryControlHeight
 		private int smallGapH = 3; // horizontal gap between secondary controls (scales at half rate)
@@ -1708,7 +1708,7 @@ private int ATMSelectionCount = 0;
 		private double CurrentHighRender2 = 0;
 		private double CurrentLowRender2 = 0;
 		
-		private Brush ThisBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0,100,0));
+		private Brush ThisBrush = FrozenRgbBrush(0, 100, 0);
 		
 		private SharpDX.Direct2D1.Brush FinalThisBrushDX = null;
 		
@@ -29093,9 +29093,9 @@ double CurrentLastLowPlaced = 0;
 				byte mdOverlayC = mdDark ? (byte)255 : (byte)0;   // row separators + spread row bg
 
 				// Color scheme
-				var askRedBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(180, 50, 50));
+				var askRedBrush = FrozenRgbBrush(180, 50, 50);
 				askRedBrush.Freeze();
-				var bidGreenBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(50, 160, 50));
+				var bidGreenBrush = FrozenRgbBrush(50, 160, 50);
 				bidGreenBrush.Freeze();
 				var askBarBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(60, 220, 60, 60));
 				askBarBrush.Freeze();
@@ -32907,19 +32907,19 @@ double CurrentLastLowPlaced = 0;
 			pPanelFontFamily = "";
 			pMarketDataFontSize = 12;
 			pAllowKeyboardQtyEntry = true;
-			pColorBuyEMA2 = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 80, 0));
+			pColorBuyEMA2 = FrozenRgbBrush(0, 80, 0);
 			pColorBuyEMA = Brushes.Lime;
-			pColorSellEMA2 = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(80, 0, 0));
+			pColorSellEMA2 = FrozenRgbBrush(80, 0, 0);
 			pColorSellEMA = Brushes.Red;
 			pColorNeutralEMA2 = Brushes.DimGray;
 			pColorNeutralEMA = Brushes.White;
-			pColorButtonReverse = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(70, 50, 20));
-			pColorButtonCloseAll = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(70, 50, 20));
-			pColorButtonMoveAllExits = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(70, 50, 20));
-			pColorButtonOrderType = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(40, 40, 40));
-			pColorButtonOrderType4 = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(70, 50, 20));
+			pColorButtonReverse = FrozenRgbBrush(70, 50, 20);
+			pColorButtonCloseAll = FrozenRgbBrush(70, 50, 20);
+			pColorButtonMoveAllExits = FrozenRgbBrush(70, 50, 20);
+			pColorButtonOrderType = FrozenRgbBrush(40, 40, 40);
+			pColorButtonOrderType4 = FrozenRgbBrush(70, 50, 20);
 			pSpaceBetweenGroups = 20;
-			pSimBackColor = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(20, 40, 60));
+			pSimBackColor = FrozenRgbBrush(20, 40, 60);
 			pLiveBackColor = Brushes.Transparent;
 
 			// Clear persisted UI state so the panel rebuilds with default section layout.
@@ -32959,8 +32959,8 @@ double CurrentLastLowPlaced = 0;
 			pOrderTargetColor = Brushes.Lime;
 			pOrderStopColor = Brushes.Red;
 			pOrderChangeColor = Brushes.Orange;
-			pCustomOrderBuyColor = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 100, 0));
-			pCustomOrderSellColor = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(100, 0, 0));
+			pCustomOrderBuyColor = FrozenRgbBrush(0, 100, 0);
+			pCustomOrderSellColor = FrozenRgbBrush(100, 0, 0);
 			pThisSummaryTypeMode = "None";
 			pThisSummaryExitOrderMode = "Points";
 			pOrderSummaryColor = Brushes.LightGray;
@@ -87662,26 +87662,26 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), Name = "On Button Color", GroupName = "Duplicate Account Actions", Order = 48)]
 		public Brush ColorDuplicate
 		{
-			get { return pColorDuplicate; } set { pColorDuplicate = value; }
+			get { return pColorDuplicate; } set { pColorDuplicate = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorDuplicateS
 		{
-			get { return Serialize.BrushToString(pColorDuplicate); } set { pColorDuplicate = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorDuplicate); } set { pColorDuplicate = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 		
 		
-		private Brush pColorDuplicate2 = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(40,40,40));
+		private Brush pColorDuplicate2 = FrozenRgbBrush(40, 40, 40);
 		[XmlIgnore]
 		[Display(ResourceType = typeof(Custom.Resource), Name = "Off Button Color", GroupName = "Duplicate Account Actions", Order = 50)]
 		public Brush ColorDuplicate2
 		{
-			get { return pColorDuplicate2; } set { pColorDuplicate2 = value; }
+			get { return pColorDuplicate2; } set { pColorDuplicate2 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorDuplicate2S
 		{
-			get { return Serialize.BrushToString(pColorDuplicate2); } set { pColorDuplicate2 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorDuplicate2); } set { pColorDuplicate2 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 		
 	
@@ -87817,12 +87817,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "One Click Entry Orders", Name = "Buy Color", Order = 30)]
 		public Brush BuyOneClickColor1
 		{
-			get { return pBuyOneClickColor1; } set { pBuyOneClickColor1 = value; }
+			get { return pBuyOneClickColor1; } set { pBuyOneClickColor1 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string BuyOneClickColor1S
 		{
-			get { return Serialize.BrushToString(pBuyOneClickColor1); } set { pBuyOneClickColor1 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pBuyOneClickColor1); } set { pBuyOneClickColor1 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 
 		private Brush pSellOneClickColor1 = Brushes.Red;
@@ -87831,12 +87831,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "One Click Entry Orders", Name = "Sell Color", Order = 31)]
 		public Brush SellOneClickColor1
 		{
-			get { return pSellOneClickColor1; } set { pSellOneClickColor1 = value; }
+			get { return pSellOneClickColor1; } set { pSellOneClickColor1 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string SellOneClickColor1S
 		{
-			get { return Serialize.BrushToString(pSellOneClickColor1); } set { pSellOneClickColor1 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pSellOneClickColor1); } set { pSellOneClickColor1 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 		
 	
@@ -87972,12 +87972,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Chart Menu Buttons Display", Name = "Highlight Color", Order = 3)]
 		public Brush ColorButtonsOff2
 		{
-			get { return pColorButtonsOff; } set { pColorButtonsOff = value; }
+			get { return pColorButtonsOff; } set { pColorButtonsOff = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorButtonsOff2S
 		{
-			get { return Serialize.BrushToString(pColorButtonsOff); } set { pColorButtonsOff = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorButtonsOff); } set { pColorButtonsOff = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 		
 		
@@ -88116,14 +88116,14 @@ private void TotalTheOrders()
 //		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Crosshair Display", Name = "Box Color", Order = 113)]
 //		public Brush CrossHairBrush
 //		{
-//			get { return pCrossHairBrush; } set { pCrossHairBrush = value; }
+//			get { return pCrossHairBrush; } set { pCrossHairBrush = FreezeBrush(value); }
 //		}
 //		[Browsable(false)]
 //		public string CrossHairBrushS
 //		{
-//			get { return Serialize.BrushToString(pCrossHairBrush); } set { pCrossHairBrush = Serialize.StringToBrush(value); }
+//			get { return Serialize.BrushToString(pCrossHairBrush); } set { pCrossHairBrush = FreezeBrush(Serialize.StringToBrush(value)); }
 //		}
-//		pCrossHairBrush = Serialize.StringToBrush(value); }
+//		pCrossHairBrush = FreezeBrush(Serialize.StringToBrush(value)); }
 //		}
 
 		private int pCrossHairOpacity = 10;
@@ -88268,12 +88268,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Executions Display", Name = "Buy Triangle Color", Order = 2)]
 		public Brush ColorAskTri
 		{
-			get { return pColorAskTri; } set { pColorAskTri = value; }
+			get { return pColorAskTri; } set { pColorAskTri = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorAskTriS
 		{
-			get { return Serialize.BrushToString(pColorAskTri); } set { pColorAskTri = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorAskTri); } set { pColorAskTri = FreezeBrush(Serialize.StringToBrush(value)); }
 		}		
 			
 		
@@ -88282,12 +88282,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Executions Display", Name = "Sell Triangle Color", Order = 3)]
 		public Brush ColorBid2Tri
 		{
-			get { return pColorBid2Tri; } set { pColorBid2Tri = value; }
+			get { return pColorBid2Tri; } set { pColorBid2Tri = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorBid2TriS
 		{
-			get { return Serialize.BrushToString(pColorBid2Tri); } set { pColorBid2Tri = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorBid2Tri); } set { pColorBid2Tri = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 		
 
@@ -88297,12 +88297,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Executions Display", Name = "Exit Triangle Color", Order = 4)]
 		public Brush ColorExitTri
 		{
-			get { return pColorExitTri; } set { pColorExitTri = value; }
+			get { return pColorExitTri; } set { pColorExitTri = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorExitTriS
 		{
-			get { return Serialize.BrushToString(pColorExitTri); } set { pColorExitTri = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorExitTri); } set { pColorExitTri = FreezeBrush(Serialize.StringToBrush(value)); }
 		}		
 				
 		
@@ -88621,12 +88621,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Advanced Exit Orders Management", Name = "Trailing Stop Plot Highlight Color", Order = 1)]
 		public Brush AttachStopColor
 		{
-			get { return pAttachStopColor; } set { pAttachStopColor = value; }
+			get { return pAttachStopColor; } set { pAttachStopColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string AttachStopColorS
 		{
-			get { return Serialize.BrushToString(pAttachStopColor); } set { pAttachStopColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pAttachStopColor); } set { pAttachStopColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 		
 				
@@ -89298,12 +89298,12 @@ private void TotalTheOrders()
 //		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Last Price Display", Name = "Box Color", Order = 31)]
 //		public Brush LastPriceBrush
 //		{
-//			get { return pLastPriceBrush; } set { pLastPriceBrush = value; }
+//			get { return pLastPriceBrush; } set { pLastPriceBrush = FreezeBrush(value); }
 //		}
 //		[Browsable(false)]
 //		public string LastPriceBrushS
 //		{
-//			get { return Serialize.BrushToString(pLastPriceBrush); } set { pLastPriceBrush = Serialize.StringToBrush(value); }
+//			get { return Serialize.BrushToString(pLastPriceBrush); } set { pLastPriceBrush = FreezeBrush(Serialize.StringToBrush(value)); }
 //		}	
 		
 //		private int pLastPriceOpacity = 20;
@@ -89350,12 +89350,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Last Price Display", Name = "Marker Color", Order = 38)]
 		public Brush ColorLastPriceMarker
 		{
-			get { return pColorLastPriceMarker; } set { pColorLastPriceMarker = value; }
+			get { return pColorLastPriceMarker; } set { pColorLastPriceMarker = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorLastPriceMarkerS
 		{
-			get { return Serialize.BrushToString(pColorLastPriceMarker); } set { pColorLastPriceMarker = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorLastPriceMarker); } set { pColorLastPriceMarker = FreezeBrush(Serialize.StringToBrush(value)); }
 		}		
 		
 		
@@ -89448,12 +89448,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Market Depth Display", Name = "Ask Normal Color", Order = 11)]
 		public Brush AskHistColor1
 		{
-			get { return pAskHistColor1; } set { pAskHistColor1 = value; }
+			get { return pAskHistColor1; } set { pAskHistColor1 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string AskHistColor1S
 		{
-			get { return Serialize.BrushToString(pAskHistColor1); } set { pAskHistColor1 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pAskHistColor1); } set { pAskHistColor1 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 		
 		private Brush pAskHistColor2 = Brushes.Red;
@@ -89462,12 +89462,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Market Depth Display", Name = "Ask Largest Color", Order = 13)]
 		public Brush AskHistColor2
 		{
-			get { return pAskHistColor2; } set { pAskHistColor2 = value; }
+			get { return pAskHistColor2; } set { pAskHistColor2 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string AskHistColor2S
 		{
-			get { return Serialize.BrushToString(pAskHistColor2); } set { pAskHistColor2 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pAskHistColor2); } set { pAskHistColor2 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 		
 		private Brush pBidHistColor1 = Brushes.Green;
@@ -89476,27 +89476,27 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Market Depth Display", Name = "Bid Normal Color", Order = 21)]
 		public Brush BidHistColor1
 		{
-			get { return pBidHistColor1; } set { pBidHistColor1 = value; }
+			get { return pBidHistColor1; } set { pBidHistColor1 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string BidHistColor1S
 		{
-			get { return Serialize.BrushToString(pBidHistColor1); } set { pBidHistColor1 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pBidHistColor1); } set { pBidHistColor1 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 		
-		//private Brush pBidHistColor2 = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0,60,0));
+		//private Brush pBidHistColor2 = FrozenRgbBrush(0, 60, 0);
 		private Brush pBidHistColor2 = Brushes.Green;
 		[XmlIgnore]
 		//[Description("Market Depth Display")]
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Market Depth Display", Name = "Bid Largest Color", Order = 23)]
 		public Brush BidHistColor2
 		{
-			get { return pBidHistColor2; } set { pBidHistColor2 = value; }
+			get { return pBidHistColor2; } set { pBidHistColor2 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string BidHistColor2S
 		{
-			get { return Serialize.BrushToString(pBidHistColor2); } set { pBidHistColor2 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pBidHistColor2); } set { pBidHistColor2 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 		
 		
@@ -89558,12 +89558,12 @@ private void TotalTheOrders()
 //		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Market Depth Display", Name = "Ask Outline Color", Order = 1)]
 //		public Brush AskOutColor1
 //		{
-//			get { return pAskOutColor1; } set { pAskOutColor1 = value; }
+//			get { return pAskOutColor1; } set { pAskOutColor1 = FreezeBrush(value); }
 //		}
 //		[Browsable(false)]
 //		public string AskOutColor1S
 //		{
-//			get { return Serialize.BrushToString(pAskOutColor1); } set { pAskOutColor1 = Serialize.StringToBrush(value); }
+//			get { return Serialize.BrushToString(pAskOutColor1); } set { pAskOutColor1 = FreezeBrush(Serialize.StringToBrush(value)); }
 //		}
 		
 
@@ -89572,12 +89572,12 @@ private void TotalTheOrders()
 //		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Market Depth Display", Name = "Bid Outline Color", Order = 1)]
 //		public Brush BidOutColor1
 //		{
-//			get { return pBidOutColor1; } set { pBidOutColor1 = value; }
+//			get { return pBidOutColor1; } set { pBidOutColor1 = FreezeBrush(value); }
 //		}
 //		[Browsable(false)]
 //		public string BidOutColor1S
 //		{
-//			get { return Serialize.BrushToString(pBidOutColor1); } set { pBidOutColor1 = Serialize.StringToBrush(value); }
+//			get { return Serialize.BrushToString(pBidOutColor1); } set { pBidOutColor1 = FreezeBrush(Serialize.StringToBrush(value)); }
 //		}
 		
 
@@ -89706,17 +89706,17 @@ private void TotalTheOrders()
 		
 
 		
-//		private Brush pChartBackgroundBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(10,10,10));
+//		private Brush pChartBackgroundBrush = FrozenRgbBrush(10, 10, 10);
 //		[XmlIgnore]
 //		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Chart Display", Name = "Background Color", Order = 20)]
 //		public Brush ChartBackgroundBrush
 //		{
-//			get { return pChartBackgroundBrush; } set { pChartBackgroundBrush = value; }
+//			get { return pChartBackgroundBrush; } set { pChartBackgroundBrush = FreezeBrush(value); }
 //		}
 //		[Browsable(false)]
 //		public string ChartBackgroundBrushS
 //		{
-//			get { return Serialize.BrushToString(pChartBackgroundBrush); } set { pChartBackgroundBrush = Serialize.StringToBrush(value); }
+//			get { return Serialize.BrushToString(pChartBackgroundBrush); } set { pChartBackgroundBrush = FreezeBrush(Serialize.StringToBrush(value)); }
 //		}		
 
 		private Brush pChartAxisBrush = Brushes.WhiteSmoke;
@@ -89724,16 +89724,16 @@ private void TotalTheOrders()
 //		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Chart Display", Name = "Axis Color", Order = 21)]
 //		public Brush ChartAxisBrush
 //		{
-//			get { return pChartAxisBrush; } set { pChartAxisBrush = value; }
+//			get { return pChartAxisBrush; } set { pChartAxisBrush = FreezeBrush(value); }
 //		}
 //		[Browsable(false)]
 //		public string ChartAxisBrushS
 //		{
-//			get { return Serialize.BrushToString(pChartAxisBrush); } set { pChartAxisBrush = Serialize.StringToBrush(value); }
+//			get { return Serialize.BrushToString(pChartAxisBrush); } set { pChartAxisBrush = FreezeBrush(Serialize.StringToBrush(value)); }
 //		}		
 		
 		
-//        private Stroke pGridLineHStroke = new Stroke(new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(50,50,50)), DashStyleHelper.Dash, 1);
+//        private Stroke pGridLineHStroke = new Stroke(FrozenRgbBrush(50, 50, 50), DashStyleHelper.Dash, 1);
 //        [Display(ResourceType = typeof(Custom.Resource), GroupName = "Chart Display", Name = "Grid Line Horizontal Display", Order = 39)]
 //        public Stroke GridLineHStroke
 //        {
@@ -89741,7 +89741,7 @@ private void TotalTheOrders()
 //            set { pGridLineHStroke = value; }
 //        }		
 		
-//        private Stroke pGridLineVStroke = new Stroke(new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(50,50,50)), DashStyleHelper.Dash, 1);
+//        private Stroke pGridLineVStroke = new Stroke(FrozenRgbBrush(50, 50, 50), DashStyleHelper.Dash, 1);
 //        [Display(ResourceType = typeof(Custom.Resource), GroupName = "Chart Display", Name = "Grid Line Vertical Display", Order = 40)]
 //        public Stroke GridLineVStroke
 //        {
@@ -89787,12 +89787,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Bar Counter Display", Name = "Text Color", Order = 11)]
 		public Brush BarCounterColor
 		{
-			get { return pBarCounterColor; } set { pBarCounterColor = value; }
+			get { return pBarCounterColor; } set { pBarCounterColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string BarCounterColorS
 		{
-			get { return Serialize.BrushToString(pBarCounterColor); } set { pBarCounterColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pBarCounterColor); } set { pBarCounterColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}		
 		
 		
@@ -89946,17 +89946,17 @@ private void TotalTheOrders()
 		
 
 		
-		private Brush pSimBackColor = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(20,40,60));
+		private Brush pSimBackColor = FrozenRgbBrush(20, 40, 60);
 		[XmlIgnore]
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Order Panel Display",  Name = "Background Color Sim", Order = 2001)]
 		public Brush SimBackColor
 		{
-			get { return pSimBackColor; } set { pSimBackColor = value; }
+			get { return pSimBackColor; } set { pSimBackColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string SimBackColorS
 		{
-			get { return Serialize.BrushToString(pSimBackColor); } set { pSimBackColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pSimBackColor); } set { pSimBackColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 				
 		private Brush pLiveBackColor = Brushes.Transparent;
@@ -89964,12 +89964,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Order Panel Display",  Name = "Background Color Live", Order = 2000)]
 		public Brush LiveBackColor
 		{
-			get { return pLiveBackColor; } set { pLiveBackColor = value; }
+			get { return pLiveBackColor; } set { pLiveBackColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string LiveBackColorS
 		{
-			get { return Serialize.BrushToString(pLiveBackColor); } set { pLiveBackColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pLiveBackColor); } set { pLiveBackColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}		
 		
 		
@@ -91077,12 +91077,12 @@ private void TotalTheOrders()
 //		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Order Flag Display", Name = "Color Order Moving", Order = 31)]
 //		public Brush OrderMovingColor
 //		{
-//			get { return pOrderMovingColor; } set { pOrderMovingColor = value; }
+//			get { return pOrderMovingColor; } set { pOrderMovingColor = FreezeBrush(value); }
 //		}
 //		[Browsable(false)]
 //		public string OrderMovingColorS
 //		{
-//			get { return Serialize.BrushToString(pOrderMovingColor); } set { pOrderMovingColor = Serialize.StringToBrush(value); }
+//			get { return Serialize.BrushToString(pOrderMovingColor); } set { pOrderMovingColor = FreezeBrush(Serialize.StringToBrush(value)); }
 //		}		
 		
 		
@@ -91100,31 +91100,31 @@ private void TotalTheOrders()
 		}
 		
 		
-		private Brush pCustomOrderBuyColor = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0,100,0));
+		private Brush pCustomOrderBuyColor = FrozenRgbBrush(0, 100, 0);
 		[XmlIgnore]
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Order Flag Display",  Name = "Color Custom Order Buy", Order = 40)]
 		public Brush CustomOrderBuyColor
 		{
-			get { return pCustomOrderBuyColor; } set { pCustomOrderBuyColor = value; }
+			get { return pCustomOrderBuyColor; } set { pCustomOrderBuyColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string CustomOrderBuyColorS
 		{
-			get { return Serialize.BrushToString(pCustomOrderBuyColor); } set { pCustomOrderBuyColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pCustomOrderBuyColor); } set { pCustomOrderBuyColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 		
 		
-		private Brush pCustomOrderSellColor = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(100,0,0));
+		private Brush pCustomOrderSellColor = FrozenRgbBrush(100, 0, 0);
 		[XmlIgnore]
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Order Flag Display", Name = "Color Custom Order Sell", Order = 41)]
 		public Brush CustomOrderSellColor
 		{
-			get { return pCustomOrderSellColor; } set { pCustomOrderSellColor = value; }
+			get { return pCustomOrderSellColor; } set { pCustomOrderSellColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string CustomOrderSellColorS
 		{
-			get { return Serialize.BrushToString(pCustomOrderSellColor); } set { pCustomOrderSellColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pCustomOrderSellColor); } set { pCustomOrderSellColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 				
 		
@@ -91675,12 +91675,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Order Panel Display", Name = "PNL Section Background", Order = 80)]
 		public Brush PNLBackgroundColor
 		{
-			get { return pPNLBackgroundColor; } set { pPNLBackgroundColor = value; }
+			get { return pPNLBackgroundColor; } set { pPNLBackgroundColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string PNLBackgroundColorS
 		{
-			get { return Serialize.BrushToString(pPNLBackgroundColor); } set { pPNLBackgroundColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pPNLBackgroundColor); } set { pPNLBackgroundColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 
 		// Text colour used in the PNL box when in profit; also QTY box background when long.
@@ -91689,12 +91689,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Order Panel Display", Name = "PNL Profit Text / Long QTY", Order = 81)]
 		public Brush PNLProfitColor
 		{
-			get { return pPNLProfitColor; } set { pPNLProfitColor = value; }
+			get { return pPNLProfitColor; } set { pPNLProfitColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string PNLProfitColorS
 		{
-			get { return Serialize.BrushToString(pPNLProfitColor); } set { pPNLProfitColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pPNLProfitColor); } set { pPNLProfitColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 
 		// Text colour used in the PNL box when in loss; also QTY box background when short.
@@ -91703,12 +91703,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Order Panel Display", Name = "PNL Loss Text / Short QTY", Order = 82)]
 		public Brush PNLLossColor
 		{
-			get { return pPNLLossColor; } set { pPNLLossColor = value; }
+			get { return pPNLLossColor; } set { pPNLLossColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string PNLLossColorS
 		{
-			get { return Serialize.BrushToString(pPNLLossColor); } set { pPNLLossColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pPNLLossColor); } set { pPNLLossColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 
 		// Text colour used in the PNL / QTY / Entry boxes when flat (no position).
@@ -91717,12 +91717,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Order Panel Display", Name = "PNL Flat Text Color", Order = 83)]
 		public Brush PNLFlatTextColor
 		{
-			get { return pPNLFlatTextColor; } set { pPNLFlatTextColor = value; }
+			get { return pPNLFlatTextColor; } set { pPNLFlatTextColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string PNLFlatTextColorS
 		{
-			get { return Serialize.BrushToString(pPNLFlatTextColor); } set { pPNLFlatTextColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pPNLFlatTextColor); } set { pPNLFlatTextColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 
 		// === Chart-window PNL colours (Order Flag Display) ===
@@ -91733,12 +91733,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Order Flag Display", Name = "PNL - Profit", Order = 80)]
 		public Brush ChartPNLProfitColor
 		{
-			get { return pChartPNLProfitColor; } set { pChartPNLProfitColor = value; }
+			get { return pChartPNLProfitColor; } set { pChartPNLProfitColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ChartPNLProfitColorS
 		{
-			get { return Serialize.BrushToString(pChartPNLProfitColor); } set { pChartPNLProfitColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pChartPNLProfitColor); } set { pChartPNLProfitColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 
 		private Brush pChartPNLLossColor = Brushes.Red;
@@ -91746,12 +91746,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Order Flag Display", Name = "PNL - Loss", Order = 81)]
 		public Brush ChartPNLLossColor
 		{
-			get { return pChartPNLLossColor; } set { pChartPNLLossColor = value; }
+			get { return pChartPNLLossColor; } set { pChartPNLLossColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ChartPNLLossColorS
 		{
-			get { return Serialize.BrushToString(pChartPNLLossColor); } set { pChartPNLLossColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pChartPNLLossColor); } set { pChartPNLLossColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 
 		// Solid background behind the chart-side PNL text (the dark cell to the left of the
@@ -91761,12 +91761,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Order Flag Display", Name = "PNL - Background", Order = 82)]
 		public Brush ChartPNLBackgroundColor
 		{
-			get { return pChartPNLBackgroundColor; } set { pChartPNLBackgroundColor = value; }
+			get { return pChartPNLBackgroundColor; } set { pChartPNLBackgroundColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ChartPNLBackgroundColorS
 		{
-			get { return Serialize.BrushToString(pChartPNLBackgroundColor); } set { pChartPNLBackgroundColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pChartPNLBackgroundColor); } set { pChartPNLBackgroundColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 
 		// Text colour shown in the chart-side PNL cell when flat / not yet computed
@@ -91776,12 +91776,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Order Flag Display", Name = "PNL - Flat / Placeholder", Order = 83)]
 		public Brush ChartPNLFlatColor
 		{
-			get { return pChartPNLFlatColor; } set { pChartPNLFlatColor = value; }
+			get { return pChartPNLFlatColor; } set { pChartPNLFlatColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ChartPNLFlatColorS
 		{
-			get { return Serialize.BrushToString(pChartPNLFlatColor); } set { pChartPNLFlatColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pChartPNLFlatColor); } set { pChartPNLFlatColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 		
 		
@@ -91817,31 +91817,31 @@ private void TotalTheOrders()
 
 
 		
-		private Brush pClickUPColor = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0,100,0));
+		private Brush pClickUPColor = FrozenRgbBrush(0, 100, 0);
 		[XmlIgnore]
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Click Entry Orders",  Name = "Buy Flag Color", Order = 20)]
 		public Brush ClickUPColor
 		{
-			get { return pClickUPColor; } set { pClickUPColor = value; }
+			get { return pClickUPColor; } set { pClickUPColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ClickUPColorS
 		{
-			get { return Serialize.BrushToString(pClickUPColor); } set { pClickUPColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pClickUPColor); } set { pClickUPColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 		
 		
-		private Brush pClickDNColor = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(100,0,0));
+		private Brush pClickDNColor = FrozenRgbBrush(100, 0, 0);
 		[XmlIgnore]
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Click Entry Orders", Name = "Sell Flag Color", Order = 20)]
 		public Brush ClickDNColor
 		{
-			get { return pClickDNColor; } set { pClickDNColor = value; }
+			get { return pClickDNColor; } set { pClickDNColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ClickDNColorS
 		{
-			get { return Serialize.BrushToString(pClickDNColor); } set { pClickDNColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pClickDNColor); } set { pClickDNColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 				
   
@@ -91870,7 +91870,7 @@ private void TotalTheOrders()
 		public string Brush01S
 		{
 			get { return Serialize.BrushToString(Brush01); }
-			set { Brush01 = Serialize.StringToBrush(value); }
+			set { Brush01 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 
 		private int	pOpacity01 = 50;
@@ -91917,7 +91917,7 @@ private void TotalTheOrders()
 		public string Brush02S
 		{
 			get { return Serialize.BrushToString(Brush02); }
-			set { Brush02 = Serialize.StringToBrush(value); }
+			set { Brush02 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}
 
 		private int	pOpacity02 = 50;
@@ -92324,12 +92324,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Signal Entry Orders", Name = "Buy Color", Order = 30)]
 		public Brush SignalsBuyColor
 		{
-			get { return pSignalsBuyColor; } set { pSignalsBuyColor = value; }
+			get { return pSignalsBuyColor; } set { pSignalsBuyColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string SignalsBuyColorS
 		{
-			get { return Serialize.BrushToString(pSignalsBuyColor); } set { pSignalsBuyColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pSignalsBuyColor); } set { pSignalsBuyColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}		
 		
 				
@@ -92339,12 +92339,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Signal Entry Orders", Name = "Sell Color", Order = 31)]
 		public Brush SignalsSellColor
 		{
-			get { return pSignalsSellColor; } set { pSignalsSellColor = value; }
+			get { return pSignalsSellColor; } set { pSignalsSellColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string SignalsSellColorS
 		{
-			get { return Serialize.BrushToString(pSignalsSellColor); } set { pSignalsSellColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pSignalsSellColor); } set { pSignalsSellColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}			
 		
 		
@@ -93465,32 +93465,32 @@ private void TotalTheOrders()
 
 		
 		
-		private Brush pColorButtonOrderType3 = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(40,40,40));
+		private Brush pColorButtonOrderType3 = FrozenRgbBrush(40, 40, 40);
 		[XmlIgnore]
 		[Description("")]
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Iceberg & Time Sliced Entry Orders", Name = "Order Type (Inactive) Button Color", Order = 60)]
 		public Brush ColorButtonOrderType3
 		{
-			get { return pColorButtonOrderType3; } set { pColorButtonOrderType3 = value; }
+			get { return pColorButtonOrderType3; } set { pColorButtonOrderType3 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorButtonOrderType3S
 		{
-			get { return Serialize.BrushToString(pColorButtonOrderType3); } set { pColorButtonOrderType3 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorButtonOrderType3); } set { pColorButtonOrderType3 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 		
-		private Brush pColorButtonOrderType2 = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(70,50,20));
+		private Brush pColorButtonOrderType2 = FrozenRgbBrush(70, 50, 20);
 		[XmlIgnore]
 		[Description("")]
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Iceberg & Time Sliced Entry Orders", Name = "Order Type (Active) Button Color", Order = 61)]
 		public Brush ColorButtonOrderType2
 		{
-			get { return pColorButtonOrderType2; } set { pColorButtonOrderType2 = value; }
+			get { return pColorButtonOrderType2; } set { pColorButtonOrderType2 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorButtonOrderType2S
 		{
-			get { return Serialize.BrushToString(pColorButtonOrderType2); } set { pColorButtonOrderType2 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorButtonOrderType2); } set { pColorButtonOrderType2 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 
 		
@@ -94495,12 +94495,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), Name = "Normal Button Color", GroupName = "Bracket Entry Orders", Order = 50)]
 		public Brush ColorBracket2
 		{
-			get { return pColorBracket2; } set { pColorBracket2 = value; }
+			get { return pColorBracket2; } set { pColorBracket2 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorBracket2S
 		{
-			get { return Serialize.BrushToString(pColorBracket2); } set { pColorBracket2 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorBracket2); } set { pColorBracket2 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 		
 	
@@ -94510,12 +94510,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), Name = "Active Button Color", GroupName = "Bracket Entry Orders", Order = 52)]
 		public Brush ColorBracket
 		{
-			get { return pColorBracket; } set { pColorBracket = value; }
+			get { return pColorBracket; } set { pColorBracket = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorBracketS
 		{
-			get { return Serialize.BrushToString(pColorBracket); } set { pColorBracket = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorBracket); } set { pColorBracket = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 		
 		
@@ -94850,12 +94850,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Attach Orders To Indicator", Name = "Select Plot Highlight Color", Order = 10)]
 		public Brush SelectAttachOrderColor
 		{
-			get { return pSelectAttachOrderColor; } set { pSelectAttachOrderColor = value; }
+			get { return pSelectAttachOrderColor; } set { pSelectAttachOrderColor = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string SelectAttachOrderColorS
 		{
-			get { return Serialize.BrushToString(pSelectAttachOrderColor); } set { pSelectAttachOrderColor = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pSelectAttachOrderColor); } set { pSelectAttachOrderColor = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 		
 		
@@ -95013,62 +95013,62 @@ private void TotalTheOrders()
 				
 		
 	
-		private Brush pColorATMRow1 = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(45,45,45));
+		private Brush pColorATMRow1 = FrozenRgbBrush(45, 45, 45);
 		[XmlIgnore]
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "ATM Strategy Quick Select Buttons", Name = "Row 1 Color", Order = 300)]
 		public Brush ColorATMRow1
 		{
-			get { return pColorATMRow1; } set { pColorATMRow1 = value; }
+			get { return pColorATMRow1; } set { pColorATMRow1 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorATMRow1S
 		{
-			get { return Serialize.BrushToString(pColorATMRow1); } set { pColorATMRow1 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorATMRow1); } set { pColorATMRow1 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 		
 		
 		
-		private Brush pColorATMRow2 = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(30,30,30));
+		private Brush pColorATMRow2 = FrozenRgbBrush(30, 30, 30);
 		[XmlIgnore]
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "ATM Strategy Quick Select Buttons", Name = "Row 2 Color", Order = 301)]
 		public Brush ColorATMRow2
 		{
-			get { return pColorATMRow2; } set { pColorATMRow2 = value; }
+			get { return pColorATMRow2; } set { pColorATMRow2 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorATMRow2S
 		{
-			get { return Serialize.BrushToString(pColorATMRow2); } set { pColorATMRow2 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorATMRow2); } set { pColorATMRow2 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 		
 		
 	
-		private Brush pColorATMRow3 = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(15,15,15));
+		private Brush pColorATMRow3 = FrozenRgbBrush(15, 15, 15);
 		[XmlIgnore]
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "ATM Strategy Quick Select Buttons", Name = "Row 3 Color", Order = 302)]
 		public Brush ColorATMRow3
 		{
-			get { return pColorATMRow3; } set { pColorATMRow3 = value; }
+			get { return pColorATMRow3; } set { pColorATMRow3 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorATMRow3S
 		{
-			get { return Serialize.BrushToString(pColorATMRow3); } set { pColorATMRow3 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorATMRow3); } set { pColorATMRow3 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 		
 	
 	
-		private Brush pColorATMRow4 = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(70,50,20));
+		private Brush pColorATMRow4 = FrozenRgbBrush(70, 50, 20);
 		[XmlIgnore]
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "ATM Strategy Quick Select Buttons", Name = "Active Color", Order = 303)]
 		public Brush ColorATMRow4
 		{
-			get { return pColorATMRow4; } set { pColorATMRow4 = value; }
+			get { return pColorATMRow4; } set { pColorATMRow4 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorATMRow4S
 		{
-			get { return Serialize.BrushToString(pColorATMRow4); } set { pColorATMRow4 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorATMRow4); } set { pColorATMRow4 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 						
 		
@@ -95395,33 +95395,33 @@ private void TotalTheOrders()
 			
 		
 
-		private Brush pColorBuyPlan2 = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0,80,0));
+		private Brush pColorBuyPlan2 = FrozenRgbBrush(0, 80, 0);
 		[XmlIgnore]
 		[Display(ResourceType = typeof(Custom.Resource), Name = "Place Entry - Buy Color", GroupName = "ATM Strategy Planning", Order = 101)]
 		public Brush ColorBuyPlan2
 		{
-			get { return pColorBuyPlan2; } set { pColorBuyPlan2 = value; }
+			get { return pColorBuyPlan2; } set { pColorBuyPlan2 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorBuyPlan2S
 		{
-			get { return Serialize.BrushToString(pColorBuyPlan2); } set { pColorBuyPlan2 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorBuyPlan2); } set { pColorBuyPlan2 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 		
 		
 
 		
-		private Brush pColorSellPlan2 = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(80,0,0));
+		private Brush pColorSellPlan2 = FrozenRgbBrush(80, 0, 0);
 		[XmlIgnore]
 		[Display(ResourceType = typeof(Custom.Resource), Name = "Place Entry - Sell Color", GroupName = "ATM Strategy Planning", Order = 102)]
 		public Brush ColorSellPlan2
 		{
-			get { return pColorSellPlan2; } set { pColorSellPlan2 = value; }
+			get { return pColorSellPlan2; } set { pColorSellPlan2 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorSellPlan2S
 		{
-			get { return Serialize.BrushToString(pColorSellPlan2); } set { pColorSellPlan2 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorSellPlan2); } set { pColorSellPlan2 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 				
 		private int pATMTextSizeAdjustB = 2;
@@ -95730,12 +95730,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "ATM Strategy Planning", Name = "Profit Area Color", Order = 61)]
 		public Brush ColorProfitPlan2
 		{
-			get { return pColorProfitPlan2; } set { pColorProfitPlan2 = value; }
+			get { return pColorProfitPlan2; } set { pColorProfitPlan2 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorProfitPlan2S
 		{
-			get { return Serialize.BrushToString(pColorProfitPlan2); } set { pColorProfitPlan2 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorProfitPlan2); } set { pColorProfitPlan2 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 		
 		
@@ -95766,12 +95766,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "ATM Strategy Planning", Name = "Stop Loss Area Color", Order = 63)]
 		public Brush ColorLossPlan2
 		{
-			get { return pColorLossPlan2; } set { pColorLossPlan2 = value; }
+			get { return pColorLossPlan2; } set { pColorLossPlan2 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorLossPlan2S
 		{
-			get { return Serialize.BrushToString(pColorLossPlan2); } set { pColorLossPlan2 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorLossPlan2); } set { pColorLossPlan2 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}		
 	
 		
@@ -96228,17 +96228,17 @@ private void TotalTheOrders()
 		
 		
 		
-		private Brush pColorBuyEMA2 = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0,80,0));
+		private Brush pColorBuyEMA2 = FrozenRgbBrush(0, 80, 0);
 		[XmlIgnore]
 		[Display(ResourceType = typeof(Custom.Resource), Name = "Buy Normal Button Color", GroupName = "Order Panel Display", Order = 50)]
 		public Brush ColorBuyEMA2
 		{
-			get { return pColorBuyEMA2; } set { pColorBuyEMA2 = value; }
+			get { return pColorBuyEMA2; } set { pColorBuyEMA2 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorBuyEMA2S
 		{
-			get { return Serialize.BrushToString(pColorBuyEMA2); } set { pColorBuyEMA2 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorBuyEMA2); } set { pColorBuyEMA2 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 		
 		
@@ -96247,27 +96247,27 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), Name = "Buy Active Button Color", GroupName = "Order Panel Display", Order = 51)]
 		public Brush ColorBuyEMA
 		{
-			get { return pColorBuyEMA; } set { pColorBuyEMA = value; }
+			get { return pColorBuyEMA; } set { pColorBuyEMA = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorBuyEMAS
 		{
-			get { return Serialize.BrushToString(pColorBuyEMA); } set { pColorBuyEMA = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorBuyEMA); } set { pColorBuyEMA = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 				
 		
 		
-		private Brush pColorSellEMA2 = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(80,0,0));
+		private Brush pColorSellEMA2 = FrozenRgbBrush(80, 0, 0);
 		[XmlIgnore]
 		[Display(ResourceType = typeof(Custom.Resource), Name = "Sell Normal Button Color", GroupName = "Order Panel Display", Order = 52)]
 		public Brush ColorSellEMA2
 		{
-			get { return pColorSellEMA2; } set { pColorSellEMA2 = value; }
+			get { return pColorSellEMA2; } set { pColorSellEMA2 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorSellEMA2S
 		{
-			get { return Serialize.BrushToString(pColorSellEMA2); } set { pColorSellEMA2 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorSellEMA2); } set { pColorSellEMA2 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 		
 	
@@ -96280,12 +96280,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), Name = "Sell Active Button Color", GroupName = "Order Panel Display", Order = 53)]
 		public Brush ColorSellEMA
 		{
-			get { return pColorSellEMA; } set { pColorSellEMA = value; }
+			get { return pColorSellEMA; } set { pColorSellEMA = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorSellEMAS
 		{
-			get { return Serialize.BrushToString(pColorSellEMA); } set { pColorSellEMA = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorSellEMA); } set { pColorSellEMA = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 		
 		
@@ -96297,12 +96297,12 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), Name = "Neutral Normal Button Color", GroupName = "Order Panel Display", Order = 54)]
 		public Brush ColorNeutralEMA2
 		{
-			get { return pColorNeutralEMA2; } set { pColorNeutralEMA2 = value; }
+			get { return pColorNeutralEMA2; } set { pColorNeutralEMA2 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorNeutralEMA2S
 		{
-			get { return Serialize.BrushToString(pColorNeutralEMA2); } set { pColorNeutralEMA2 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorNeutralEMA2); } set { pColorNeutralEMA2 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 
 		
@@ -96312,55 +96312,55 @@ private void TotalTheOrders()
 		[Display(ResourceType = typeof(Custom.Resource), Name = "Neutral Active Button Color", GroupName = "Order Panel Display", Order = 55)]
 		public Brush ColorNeutralEMA
 		{
-			get { return pColorNeutralEMA; } set { pColorNeutralEMA = value; }
+			get { return pColorNeutralEMA; } set { pColorNeutralEMA = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorNeutralEMAS
 		{
-			get { return Serialize.BrushToString(pColorNeutralEMA); } set { pColorNeutralEMA = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorNeutralEMA); } set { pColorNeutralEMA = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 				
 		
 		
-		private Brush pColorButtonReverse = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(70,50,20));
+		private Brush pColorButtonReverse = FrozenRgbBrush(70, 50, 20);
 		[XmlIgnore]
 		[Display(ResourceType = typeof(Custom.Resource), Name = "BE / Reverse Button Color", GroupName = "Order Panel Display", Order = 57)]
 		public Brush ColorButtonReverse
 		{
-			get { return pColorButtonReverse; } set { pColorButtonReverse = value; }
+			get { return pColorButtonReverse; } set { pColorButtonReverse = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorButtonReverseS
 		{
-			get { return Serialize.BrushToString(pColorButtonReverse); } set { pColorButtonReverse = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorButtonReverse); } set { pColorButtonReverse = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 				
 
 		
-		private Brush pColorButtonCloseAll = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(70,50,20));
+		private Brush pColorButtonCloseAll = FrozenRgbBrush(70, 50, 20);
 		[XmlIgnore]
 		[Display(ResourceType = typeof(Custom.Resource), Name = "Close All Button Color", GroupName = "Order Panel Display", Order = 57)]
 		public Brush ColorButtonCloseAll
 		{
-			get { return pColorButtonCloseAll; } set { pColorButtonCloseAll = value; }
+			get { return pColorButtonCloseAll; } set { pColorButtonCloseAll = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorButtonCloseAllS
 		{
-			get { return Serialize.BrushToString(pColorButtonCloseAll); } set { pColorButtonCloseAll = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorButtonCloseAll); } set { pColorButtonCloseAll = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 		
-		private Brush pColorButtonMoveAllExits = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(70,50,20));
+		private Brush pColorButtonMoveAllExits = FrozenRgbBrush(70, 50, 20);
 		[XmlIgnore]
 		[Display(ResourceType = typeof(Custom.Resource), Name = "Move All Exits Button Color", GroupName = "Order Panel Display", Order = 58)]
 		public Brush ColorButtonMoveAllExits
 		{
-			get { return pColorButtonMoveAllExits; } set { pColorButtonMoveAllExits = value; }
+			get { return pColorButtonMoveAllExits; } set { pColorButtonMoveAllExits = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorButtonMoveAllExitsS
 		{
-			get { return Serialize.BrushToString(pColorButtonMoveAllExits); } set { pColorButtonMoveAllExits = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorButtonMoveAllExits); } set { pColorButtonMoveAllExits = FreezeBrush(Serialize.StringToBrush(value)); }
 		}					
 		
 
@@ -96369,32 +96369,32 @@ private void TotalTheOrders()
 		
 		
 		
-		private Brush pColorButtonOrderType = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(40,40,40));
+		private Brush pColorButtonOrderType = FrozenRgbBrush(40, 40, 40);
 		[XmlIgnore]
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Order Panel Display", Name = "Misc (Main) Button Color", Order = 59)]
 		public Brush ColorButtonOrderType
 		{
-			get { return pColorButtonOrderType; } set { pColorButtonOrderType = value; }
+			get { return pColorButtonOrderType; } set { pColorButtonOrderType = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorButtonOrderTypeS
 		{
-			get { return Serialize.BrushToString(pColorButtonOrderType); } set { pColorButtonOrderType = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorButtonOrderType); } set { pColorButtonOrderType = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 		
 	
-		private Brush pColorButtonOrderType4 = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(70,50,20));
+		private Brush pColorButtonOrderType4 = FrozenRgbBrush(70, 50, 20);
 		[XmlIgnore]
 		[Description("")]
 		[Display(ResourceType = typeof(Custom.Resource), GroupName = "Order Panel Display", Name = "Misc (Active) Button Color", Order = 61)]
 		public Brush ColorButtonOrderType4
 		{
-			get { return pColorButtonOrderType4; } set { pColorButtonOrderType4 = value; }
+			get { return pColorButtonOrderType4; } set { pColorButtonOrderType4 = FreezeBrush(value); }
 		}
 		[Browsable(false)]
 		public string ColorButtonOrderType4S
 		{
-			get { return Serialize.BrushToString(pColorButtonOrderType4); } set { pColorButtonOrderType4 = Serialize.StringToBrush(value); }
+			get { return Serialize.BrushToString(pColorButtonOrderType4); } set { pColorButtonOrderType4 = FreezeBrush(Serialize.StringToBrush(value)); }
 		}	
 		
 		
