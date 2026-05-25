@@ -85,6 +85,16 @@ try {
         }
     }
 
+    # Worktree cleanup runs every session (independent of fast-path). It's a
+    # fast no-op when nothing is stale and never touches the current worktree.
+    $cleanupScript = Join-Path $repoMain '.claude\scripts\cleanup-worktrees.ps1'
+    if (Test-Path -LiteralPath $cleanupScript) {
+        & $cleanupScript -Quiet 2>&1 | ForEach-Object {
+            Write-Log "cleanup-worktrees: $_"
+            Write-Verbose $_
+        }
+    }
+
     # Fast path — nothing to do.
     if ($junctionOk -and $hookOk) {
         Write-Log 'noop'
