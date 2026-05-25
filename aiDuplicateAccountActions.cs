@@ -386,7 +386,7 @@ namespace NinjaTrader.NinjaScript.Indicators
 		// ── End cross-indicator shared registry ─────────────────────────
 
 		// Version string — read by the AddOn to set the window caption before the indicator loads
-		public static readonly string DashboardVersion = "26. 5. 25. 5";
+		public static readonly string DashboardVersion = "26. 5. 25. 6";
 
 		// ── WPF brush freezing helpers ────────────────────────────────
 		// NT 8.1.x flags an "unfrozen brush" error when any indicator-exposed
@@ -9078,7 +9078,7 @@ private void DumpInstanceFields(object obj, string label)
 			{
 				Calculate					= Calculate.OnBarClose;
 				SetZOrder(-1);
-				SuppressDataSeriesWatermark();
+				// SuppressDataSeriesWatermark();  // DISABLED v26.5.25.6 — diagnostic test: is this the trigger for NT's "unfrozen brush" error?
 				LogBrushFreezeAudit("Historical");
 			}
 			else if (State == State.Terminated)
