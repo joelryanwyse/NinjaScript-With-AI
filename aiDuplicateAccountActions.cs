@@ -386,7 +386,7 @@ namespace NinjaTrader.NinjaScript.Indicators
 		// ── End cross-indicator shared registry ─────────────────────────
 
 		// Version string — read by the AddOn to set the window caption before the indicator loads
-		public static readonly string DashboardVersion = "26. 5. 25. 2";
+		public static readonly string DashboardVersion = "26. 5. 25. 3";
 
 		// ── WPF brush freezing helpers ────────────────────────────────
 		// NT 8.1.x flags an "unfrozen brush" error when any indicator-exposed
@@ -7748,6 +7748,71 @@ private void DumpInstanceFields(object obj, string label)
 			catch { }
 		}
 
+		// TEMPORARY DIAGNOSTIC (v26.5.25.3) — same as the ECT audit. NT's
+		// "unfrozen brush" error is a generic one-liner with no stack trace;
+		// this walks every public property on the indicator, checks any direct
+		// Brush value AND any nested .Brush member (Stroke, Pen), and logs the
+		// names of properties whose brush is not Frozen. Pull this once the
+		// freeze bug is closed.
+		private void LogBrushFreezeAudit(string when)
+		{
+			try
+			{
+				if (_diagLog == null) return;
+				var props = this.GetType().GetProperties(
+					BindingFlags.Public | BindingFlags.Instance);
+				var sb = new StringBuilder();
+				int unfrozen = 0;
+				int brushProps = 0;
+				int nestedBrushProps = 0;
+				foreach (var p in props)
+				{
+					if (!p.CanRead) continue;
+					if (p.GetIndexParameters().Length > 0) continue;
+					object value;
+					try { value = p.GetValue(this); }
+					catch { continue; }
+					if (value == null) continue;
+
+					var directBrush = value as System.Windows.Media.Brush;
+					if (directBrush != null)
+					{
+						brushProps++;
+						if (!directBrush.IsFrozen)
+						{
+							if (unfrozen > 0) sb.Append(", ");
+							sb.Append(p.Name);
+							unfrozen++;
+						}
+						continue;
+					}
+
+					var brushMember = value.GetType().GetProperty("Brush",
+						BindingFlags.Public | BindingFlags.Instance);
+					if (brushMember != null && typeof(System.Windows.Media.Brush).IsAssignableFrom(brushMember.PropertyType))
+					{
+						nestedBrushProps++;
+						System.Windows.Media.Brush innerBrush = null;
+						try { innerBrush = brushMember.GetValue(value) as System.Windows.Media.Brush; }
+						catch { continue; }
+						if (innerBrush != null && !innerBrush.IsFrozen)
+						{
+							if (unfrozen > 0) sb.Append(", ");
+							sb.Append(p.Name + ".Brush");
+							unfrozen++;
+						}
+					}
+				}
+				_diagLog.Log("RENDER", "BrushAudit_" + when,
+					"brushProps=" + brushProps + " nestedBrushProps=" + nestedBrushProps +
+					" unfrozen=" + unfrozen + (unfrozen > 0 ? " props=[" + sb.ToString() + "]" : ""));
+			}
+			catch (Exception ex)
+			{
+				try { if (_diagLog != null) _diagLog.Log("RENDER", "BRUSH_AUDIT_ERR", ex.Message); } catch { }
+			}
+		}
+
 		protected override void OnStateChange()
 		{
 			// Outer try/catch so a cross-thread or other exception in any state
@@ -7882,6 +7947,7 @@ private void DumpInstanceFields(object obj, string label)
 		    }
 			else if (State == State.Realtime)
 		    {
+				LogBrushFreezeAudit("Realtime");
 				// Cell selection (edit-mode) state must not survive a reload. A stale
 				// mouse-down can occasionally land on the new instance during init and
 				// leave a Daily Goal / Daily Loss cell active with scroll-wheel editing.
@@ -8955,6 +9021,7 @@ private void DumpInstanceFields(object obj, string label)
 				Calculate					= Calculate.OnBarClose;
 				SetZOrder(-1);
 				SuppressDataSeriesWatermark();
+				LogBrushFreezeAudit("Historical");
 			}
 			else if (State == State.Terminated)
 			{
