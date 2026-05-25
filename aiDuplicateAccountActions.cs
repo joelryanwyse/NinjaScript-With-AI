@@ -386,7 +386,7 @@ namespace NinjaTrader.NinjaScript.Indicators
 		// ── End cross-indicator shared registry ─────────────────────────
 
 		// Version string — read by the AddOn to set the window caption before the indicator loads
-		public static readonly string DashboardVersion = "26. 5. 25. 3";
+		public static readonly string DashboardVersion = "26. 5. 25. 4";
 
 		// ── WPF brush freezing helpers ────────────────────────────────
 		// NT 8.1.x flags an "unfrozen brush" error when any indicator-exposed
@@ -7950,11 +7950,19 @@ private void DumpInstanceFields(object obj, string label)
 				LogBrushFreezeAudit("Realtime");
 				// Cell selection (edit-mode) state must not survive a reload. A stale
 				// mouse-down can occasionally land on the new instance during init and
-				// leave a Daily Goal / Daily Loss cell active with scroll-wheel editing.
-				SelectedDailyGoalAccount = string.Empty;
-				SelectedDailyGoalTime    = DateTime.MinValue;
-				SelectedDailyLossAccount = string.Empty;
-				SelectedDailyLossTime    = DateTime.MinValue;
+				// leave a Daily Goal / Daily Loss / Size / ATM / Payout cell active with
+				// scroll-wheel editing — visible as the wrong row staying highlighted
+				// the moment the dashboard re-paints after reload.
+				SelectedDailyGoalAccount   = string.Empty;
+				SelectedDailyGoalTime      = DateTime.MinValue;
+				SelectedDailyLossAccount   = string.Empty;
+				SelectedDailyLossTime      = DateTime.MinValue;
+				SelectedMultiplierAccount  = string.Empty;
+				SelectedMultiplerTime      = DateTime.MinValue;
+				SelectedATMAccount         = string.Empty;
+				SelectedATMTime            = DateTime.MinValue;
+				SelectedPayoutAccount      = string.Empty;
+				SelectedPayoutTime         = DateTime.MinValue;
 
 				// Close the IsInActiveWorkspace startup race: OnTimerTick3 sets this flag
 				// every 250ms via the same comparison below, but the 0-250ms gap between
