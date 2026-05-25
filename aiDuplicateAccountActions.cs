@@ -54306,7 +54306,7 @@ private Brush GetTextColor(Brush bg2)
         if (skinname == "NinjaTrader Dark" || skinname == "Dark" || skinname == "Slate Dark" || skinname == "Slate Gray")
         {
            // return Brushes.WhiteSmoke;
-			return FrozenRgbBrush(220, 220, 220);
+			return new SolidColorBrush(Color.FromRgb(220, 220, 220));
         }
         else
         {
@@ -54320,7 +54320,7 @@ private Brush GetTextColor(Brush bg2)
             return Brushes.Black;
         else
            // return Brushes.WhiteSmoke;
-			return FrozenRgbBrush(220, 220, 220);
+			return new SolidColorBrush(Color.FromRgb(220, 220, 220));
     }
 }
 		
@@ -54814,12 +54814,12 @@ public void SetStatusLabel(int fieldNumber, bool isVisible, bool isGreen)
         if (isGreen)
         {
             // Green checkmark
-            statusLabel.Foreground = FrozenRgbBrush(0, 200, 0);
+            statusLabel.Foreground = new SolidColorBrush(Color.FromRgb(0, 200, 0));
         }
         else
         {
             // Gray checkmark
-            statusLabel.Foreground = FrozenRgbBrush(128, 128, 128);
+            statusLabel.Foreground = new SolidColorBrush(Color.FromRgb(128, 128, 128));
         }
     }
 }
@@ -56022,7 +56022,7 @@ public static SimplePopupWindow ShowPopup(string windowTitle = "Simple Input Win
 			var separator = new Separator
 			{
 				Margin = new Thickness(0),
-				Background = FrozenRgbBrush(61, 61, 66),
+				Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(61, 61, 66)),
 				Height = 1
 			};
 
