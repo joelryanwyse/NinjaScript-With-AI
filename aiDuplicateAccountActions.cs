@@ -386,7 +386,7 @@ namespace NinjaTrader.NinjaScript.Indicators
 		// ── End cross-indicator shared registry ─────────────────────────
 
 		// Version string — read by the AddOn to set the window caption before the indicator loads
-		public static readonly string DashboardVersion = "26. 5. 25. 8";
+		public static readonly string DashboardVersion = "26. 5. 25. 9";
 
 		// ── WPF brush freezing helpers ────────────────────────────────
 		// NT 8.1.x flags an "unfrozen brush" error when any indicator-exposed
@@ -7695,204 +7695,6 @@ private void DumpInstanceFields(object obj, string label)
 			}
 		}
 
-		// NT 8.1.8+ added a "Data Series Watermark" option in Chart properties
-		// that overlays text on the chart by default. Suppressed by clearing
-		// any watermark TEXT property — sufficient because an empty string
-		// stops the overlay from rendering, and avoids the side effect that
-		// triggered NT's "unfrozen brush" error when we previously also
-		// reflection-wrote Brushes.Transparent into watermark Brush DPs
-		// (v26.5.25.2 — confirmed in v26.5.25.6 binary test that disabling
-		// the Brush/Color writes stopped the error). Done via reflection so
-		// older NT builds (8.0.28 – 8.1.7) that don't expose any "Watermark*"
-		// property are a silent no-op. Idempotent via _watermarkSuppressed.
-		// Runs on the UI thread via SafeDispatch.
-		private bool _watermarkSuppressed = false;
-		private void SuppressDataSeriesWatermark()
-		{
-			if (_watermarkSuppressed) return;
-			try
-			{
-				SafeDispatch(() =>
-				{
-					try
-					{
-						if (ChartControl == null) return;
-						var hosts = new System.Collections.Generic.List<object> { ChartControl };
-						try { var p = ChartControl.Properties; if (p != null) hosts.Add(p); } catch { }
-						// DIAGNOSTIC v26.5.25.8 — enumerate ALL Watermark-named members
-						// (props + fields, read-only) on ChartControl and its Properties.
-						// v.7 cleared the string only and the error STILL fired — so
-						// either string-write cascades into a brush touch, or there's
-						// another path. List what we have so we can pick a non-DP-write
-						// suppression strategy.
-						var inv = new System.Text.StringBuilder();
-						foreach (var host in hosts)
-						{
-							if (host == null) continue;
-							string hn = host.GetType().Name;
-							PropertyInfo[] props;
-							try { props = host.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance); }
-							catch { props = new PropertyInfo[0]; }
-							foreach (var pi in props)
-							{
-								try
-								{
-									if (pi.GetIndexParameters().Length > 0) continue;
-									if (pi.Name.IndexOf("Watermark", StringComparison.OrdinalIgnoreCase) < 0) continue;
-									object cur = null; try { cur = pi.GetValue(host); } catch { }
-									string isFrozen = "";
-									var br = cur as System.Windows.Media.Brush;
-									if (br != null) isFrozen = " frozen=" + br.IsFrozen;
-									if (inv.Length > 0) inv.Append("; ");
-									inv.Append(hn + ".prop:" + pi.Name + "(" + pi.PropertyType.Name + ")=" + (cur == null ? "null" : cur.ToString()) + isFrozen);
-								}
-								catch { }
-							}
-							FieldInfo[] fields;
-							try { fields = host.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance); }
-							catch { fields = new FieldInfo[0]; }
-							foreach (var fi in fields)
-							{
-								try
-								{
-									if (fi.Name.IndexOf("Watermark", StringComparison.OrdinalIgnoreCase) < 0) continue;
-									object cur = null; try { cur = fi.GetValue(host); } catch { }
-									string isFrozen = "";
-									var br = cur as System.Windows.Media.Brush;
-									if (br != null) isFrozen = " frozen=" + br.IsFrozen;
-									if (inv.Length > 0) inv.Append("; ");
-									inv.Append(hn + ".field:" + fi.Name + "(" + fi.FieldType.Name + ")=" + (cur == null ? "null" : cur.ToString()) + isFrozen);
-								}
-								catch { }
-							}
-						}
-						if (_diagLog != null)
-							_diagLog.Log("RENDER", "WATERMARK_INVENTORY", inv.Length == 0 ? "(none)" : inv.ToString());
-						// NOTE: NOT writing anything this version — we just want the inventory.
-						_watermarkSuppressed = true;
-					}
-					catch (Exception _wsex)
-					{
-						try { if (_diagLog != null) _diagLog.Log("RENDER", "WATERMARK_INV_ERR", _wsex.Message); } catch { }
-					}
-				});
-			}
-			catch { }
-		}
-
-		// TEMPORARY DIAGNOSTIC (v26.5.25.3+) — V2 walks PROPERTIES + FIELDS
-		// (instance and static) AND recurses one level into property values
-		// that have a .Brush member, so we also catch unfrozen brushes held
-		// inside non-Brush types like Stroke/Pen plus brushes living on
-		// nested objects exposed via the indicator's property surface. Also
-		// dumps NT's ChartControl + ChartControl.Properties watermark-prop
-		// brushes so we can see if SuppressDataSeriesWatermark is triggering
-		// the NT error.
-		private void LogBrushFreezeAudit(string when)
-		{
-			try
-			{
-				if (_diagLog == null) return;
-				var t = this.GetType();
-				var sb = new StringBuilder();
-				int unfrozen = 0;
-				int total = 0;
-
-				// 1) Public instance properties (direct Brush + nested .Brush).
-				var props = t.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-				foreach (var p in props)
-				{
-					if (!p.CanRead) continue;
-					if (p.GetIndexParameters().Length > 0) continue;
-					object v; try { v = p.GetValue(this); } catch { continue; }
-					AuditOne("prop:" + p.Name, v, sb, ref total, ref unfrozen);
-				}
-
-				// 2) ALL fields (public, private, static) of Brush type.
-				var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
-				var fields = t.GetFields(flags);
-				foreach (var fi in fields)
-				{
-					if (!typeof(System.Windows.Media.Brush).IsAssignableFrom(fi.FieldType)) continue;
-					object v; try { v = fi.GetValue(this); } catch { continue; }
-					AuditOne("field:" + fi.Name, v, sb, ref total, ref unfrozen);
-				}
-
-				// 3) NT ChartControl watermark properties (these are touched
-				// by SuppressDataSeriesWatermark — if any of their current
-				// brush values are unfrozen, NT logs the error during the
-				// suppressor's write).
-				int watermarkUnfrozen = 0;
-				var watermarkSb = new StringBuilder();
-				if (ChartControl != null)
-				{
-					var hosts = new List<object> { ChartControl };
-					try { var cp = ChartControl.Properties; if (cp != null) hosts.Add(cp); } catch { }
-					foreach (var host in hosts)
-					{
-						if (host == null) continue;
-						PropertyInfo[] members;
-						try { members = host.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance); } catch { continue; }
-						foreach (var pi in members)
-						{
-							if (pi.GetIndexParameters().Length > 0) continue;
-							if (pi.Name.IndexOf("Watermark", StringComparison.OrdinalIgnoreCase) < 0) continue;
-							if (!typeof(System.Windows.Media.Brush).IsAssignableFrom(pi.PropertyType)) continue;
-							object v; try { v = pi.GetValue(host); } catch { continue; }
-							var b = v as System.Windows.Media.Brush;
-							if (b != null && !b.IsFrozen)
-							{
-								if (watermarkUnfrozen > 0) watermarkSb.Append(", ");
-								watermarkSb.Append(host.GetType().Name + "." + pi.Name);
-								watermarkUnfrozen++;
-							}
-						}
-					}
-				}
-
-				_diagLog.Log("RENDER", "BrushAudit_" + when,
-					"total=" + total + " unfrozen=" + unfrozen +
-					" watermarkUnfrozen=" + watermarkUnfrozen +
-					(unfrozen > 0 ? " props=[" + sb.ToString() + "]" : "") +
-					(watermarkUnfrozen > 0 ? " watermark=[" + watermarkSb.ToString() + "]" : ""));
-			}
-			catch (Exception ex)
-			{
-				try { if (_diagLog != null) _diagLog.Log("RENDER", "BRUSH_AUDIT_ERR", ex.Message); } catch { }
-			}
-		}
-
-		private void AuditOne(string label, object value, StringBuilder sb, ref int total, ref int unfrozen)
-		{
-			if (value == null) return;
-			var direct = value as System.Windows.Media.Brush;
-			if (direct != null)
-			{
-				total++;
-				if (!direct.IsFrozen)
-				{
-					if (unfrozen > 0) sb.Append(", ");
-					sb.Append(label);
-					unfrozen++;
-				}
-				return;
-			}
-			// Probe for a .Brush member (Stroke, Pen, etc.)
-			var brushMember = value.GetType().GetProperty("Brush", BindingFlags.Public | BindingFlags.Instance);
-			if (brushMember != null && typeof(System.Windows.Media.Brush).IsAssignableFrom(brushMember.PropertyType))
-			{
-				total++;
-				System.Windows.Media.Brush inner = null;
-				try { inner = brushMember.GetValue(value) as System.Windows.Media.Brush; } catch { return; }
-				if (inner != null && !inner.IsFrozen)
-				{
-					if (unfrozen > 0) sb.Append(", ");
-					sb.Append(label + ".Brush");
-					unfrozen++;
-				}
-			}
-		}
-
 		protected override void OnStateChange()
 		{
 			// Outer try/catch so a cross-thread or other exception in any state
@@ -7957,7 +7759,6 @@ private void DumpInstanceFields(object obj, string label)
 			}
 			else if (State == State.Configure)
 		    {
-				LogBrushFreezeAudit("Configure");
  				IsAutoScale = false;
 				
 				// Ensure TLS 1.2 for outbound HTTPS so VPS/firewalls that block older protocols can connect to your servers
@@ -8028,7 +7829,6 @@ private void DumpInstanceFields(object obj, string label)
 		    }
 			else if (State == State.Realtime)
 		    {
-				LogBrushFreezeAudit("Realtime");
 				// Cell selection (edit-mode) state must not survive a reload. A stale
 				// mouse-down can occasionally land on the new instance during init and
 				// leave a Daily Goal / Daily Loss / Size / ATM / Payout cell active with
@@ -8139,7 +7939,6 @@ private void DumpInstanceFields(object obj, string label)
 					string instanceTag = "inst-" + ((uint)_instanceId).ToString("x8");
 					_diagLog = new DiagnosticLogger(diagLogDir, instanceTag);
 					_diagLog.Log("SYSTEM", "INIT", "InstanceId=" + _instanceId + "|Tag=" + instanceTag + "|Version=" + DashboardVersion + "|Machine=" + (NinjaTrader.Cbi.License.MachineId ?? "?"));
-					LogBrushFreezeAudit("DataLoaded");
 				}
 				catch { }
 
@@ -9110,8 +8909,6 @@ private void DumpInstanceFields(object obj, string label)
 			{
 				Calculate					= Calculate.OnBarClose;
 				SetZOrder(-1);
-				SuppressDataSeriesWatermark();
-				LogBrushFreezeAudit("Historical");
 			}
 			else if (State == State.Terminated)
 			{
